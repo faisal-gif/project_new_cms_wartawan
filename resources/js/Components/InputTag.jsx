@@ -19,8 +19,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 // Komponen shadcn/ui
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Label } from "@/Components/ui/label";
+import { Badge } from "@/Components/ui/badge";
 import { cn } from "@/lib/utils"; // Pastikan path utils sesuai dengan proyek Anda
 
 function TagItem({ id, text, onRemove, onEdit }) {

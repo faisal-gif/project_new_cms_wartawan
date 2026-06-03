@@ -5,9 +5,9 @@ import "react-image-crop/dist/ReactCrop.css";
 import imageCompression from "browser-image-compression";
 
 // Komponen shadcn/ui (Sesuaikan path import jika perlu)
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/Components/ui/dialog";
+import { Button } from "@/Components/ui/button";
+import { Label } from "@/Components/ui/label";
 import { cn } from "@/lib/utils";
 
 // --- Helper: Ekstrak area crop ---
