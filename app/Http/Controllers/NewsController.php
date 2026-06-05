@@ -85,68 +85,89 @@ class NewsController extends Controller
      */
     public function store(NewsFormRequest $request)
     {
-
         $user = Auth::user();
-        // Memulai Database Transaction
         DB::beginTransaction();
 
         try {
-
-
             $applyWatermark = $request->boolean('image_watermark') ? '1' : '0';
-
-            // 2. Proses Upload image_thumbnail ke CDN
             $thumbnailUrl = null;
 
-            // Pastikan input dari frontend (React) bernama 'image_thumbnail'
+            // 1. Proses Upload image_thumbnail ke CDN
             if ($request->hasFile('image_thumbnail')) {
                 $file = $request->file('image_thumbnail');
                 $nameThumbnail = Str::slug($request->title, '-Thumbnail');
-                // Ambil URL dari response JSON CDN
                 $thumbnailUrl = $this->cdnService->uploadImage($file, $nameThumbnail, 1, 'convert', $applyWatermark) ?? null;
             }
-            // 1. Simpan tabel News
+
+            // Inisialisasi variabel untuk konten dan penampung ID tag
+            $content = $request->content;
+            $tagIds = [];
+
+            // 2. Proses Auto-Link Tag ke dalam Konten
+            // 2. Proses Auto-Link Tag ke dalam Konten
+            if ($request->has('tag') && is_array($request->tag)) {
+                foreach ($request->tag as $tagName) {
+                    $cleanTagName = strtolower(trim($tagName));
+
+                    // Simpan atau ambil tag dari database
+                    $tag = Tags::firstOrCreate([
+                        'name' => $cleanTagName
+                    ]);
+                    $tagIds[] = $tag->id;
+
+                    // REGEX: Memastikan tidak merusak HTML yang sudah ada
+                    $pattern = '/(?!(?:[^<]+>|[^>]+<\/a>))\b(' . preg_quote($tag->name, '/') . ')\b/iu';
+
+                    // Route untuk tag (sesuaikan dengan nama route Anda)
+                    $tagSlug = Str::slug($tag->name);
+                    $tagUrl = route('tags.show', $tagSlug);
+
+                    // Template HTML Anchor
+                    $replacement = '<a href="' . $tagUrl . '" class="text-blue-600 hover:underline font-semibold" title="Baca lebih lanjut tentang $1">$1</a>';
+
+                    // PERUBAHAN DI SINI:
+                    // Ubah angka 1 menjadi 2 pada parameter ke-4 ($limit)
+                    // Jika kata tersebut muncul 5 kali, hanya 2 yang pertama yang akan menjadi link.
+                    // Jika hanya muncul 1 kali, fungsi tetap aman dan hanya mengubah 1 kata tersebut.
+                    $content = preg_replace($pattern, $replacement, $content, 2);
+                }
+            }
+
+            // 3. Simpan tabel News dengan konten yang sudah termodifikasi
             $news = News::create([
-                'is_code'     => Str::random(8),
-                'writer_id'   => $user->id,
-                'title'       => $request->title,
-                'image_thumbnail' => $thumbnailUrl, // Simpan URL thumbnail dari CDN
-                'image_caption' => $request->image_caption,
-                'content'     => $request->content,
+                'is_code'         => Str::random(8),
+                'writer_id'       => $user->id,
+                'title'           => $request->title,
+                'image_thumbnail' => $thumbnailUrl,
+                'image_caption'   => $request->image_caption,
+                'content'         => $content, // Menggunakan konten hasil Regex
             ]);
 
-            // 3. Proses Tags
-            if ($request->has('tag')) {
-                $tagIds = collect($request->tag)->map(function ($tagName) {
-                    return Tags::firstOrCreate([
-                        'name' => strtolower(trim($tagName))
-                    ])->id;
-                });
-
+            // 4. Sync Tags
+            if (!empty($tagIds)) {
                 $news->tags()->sync($tagIds);
             }
 
-            // Jika semua sukses, simpan permanen ke database
             DB::commit();
 
+            // 5. Notifikasi Editor
             $editors = User::role('editor')->get();
-
             if ($editors->isNotEmpty()) {
                 Notification::send(
                     $editors,
                     new NewsSubmittedNotification(
                         $news->id,
                         $news->title,
-                        Auth::user()->name // Mengambil nama wartawan yang sedang login
+                        $user->name
                     )
                 );
             }
 
             return redirect()->route('news.index')->with('success', 'Berita berhasil disimpan!');
         } catch (\Exception $e) {
-            // Jika ada error (termasuk dari CDN), batalkan insert ke database
             DB::rollBack();
-
+            // Lebih baik menambahkan log untuk mempermudah tracing error di production
+            Log::error('Error saving news: ' . $e->getMessage());
             return back()->withInput()->withErrors(['error' => 'Gagal menyimpan berita: ' . $e->getMessage()]);
         }
     }
