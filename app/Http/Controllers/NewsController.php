@@ -141,6 +141,7 @@ class NewsController extends Controller
                 'image_thumbnail' => $thumbnailUrl,
                 'image_caption'   => $request->image_caption,
                 'content'         => $content, // Menggunakan konten hasil Regex
+                'distribution_status'          => 0,
             ]);
 
             // 4. Sync Tags
@@ -175,9 +176,36 @@ class NewsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(News $news)
+   public function show(News $news)
     {
-        //
+        $user = Auth::user();
+
+        try {
+            // Menggunakan Eager Loading (with) untuk mencegah N+1 Query Problem
+            $news->load([
+                'tags:id,name', // Hanya ambil id dan name dari tabel tags
+                'newsDaerah:id,is_code,title,status,cat_id',
+                'newsDaerah.kanal:id,name',
+                'newsNasional:news_id,is_code,news_title,news_status,catnews_id',
+                'newsNasional.kanal:catnews_id,catnews_title'
+            ])
+            ->where('writer_id', $user->id) // Keamanan: Pastikan writer hanya bisa melihat miliknya
+            ->firstOrFail(); // Jika tidak ditemukan, akan otomatis masuk ke catch block
+
+
+
+            return Inertia::render('News/Show', [
+                'news' => $news
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Menangani error jika ID tidak ditemukan atau bukan milik user
+            return redirect()->route('news.index')->withErrors(['error' => 'Data berita tidak ditemukan atau Anda tidak memiliki hak akses.']);
+        } catch (\Exception $e) {
+            // Menangani error DB/Relasi lainnya
+            Log::error('DB Show News Error: ' . $e->getMessage());
+            return redirect()->route('news.index')->withErrors(['error' => 'Terjadi kesalahan saat memuat detail berita.']);
+        }
     }
 
     /**

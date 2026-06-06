@@ -14,8 +14,9 @@ class News extends Model
         'image_thumbnail',
         'image_caption',
         'content',
+        'distribution_status',
     ];
-
+    
     public function tags()
     {
         return $this->belongsToMany(Tags::class, 'news_tags', 'news_id', 'tag_id');
