@@ -176,7 +176,7 @@ class NewsController extends Controller
     /**
      * Display the specified resource.
      */
-   public function show(News $news)
+    public function show(News $news)
     {
         $user = Auth::user();
 
@@ -189,15 +189,14 @@ class NewsController extends Controller
                 'newsNasional:news_id,is_code,news_title,news_status,catnews_id',
                 'newsNasional.kanal:catnews_id,catnews_title'
             ])
-            ->where('writer_id', $user->id) // Keamanan: Pastikan writer hanya bisa melihat miliknya
-            ->firstOrFail(); // Jika tidak ditemukan, akan otomatis masuk ke catch block
+                ->where('writer_id', $user->id) // Keamanan: Pastikan writer hanya bisa melihat miliknya
+                ->firstOrFail(); // Jika tidak ditemukan, akan otomatis masuk ke catch block
 
-
+            dd($news);
 
             return Inertia::render('News/Show', [
                 'news' => $news
             ]);
-
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             // Menangani error jika ID tidak ditemukan atau bukan milik user
             return redirect()->route('news.index')->withErrors(['error' => 'Data berita tidak ditemukan atau Anda tidak memiliki hak akses.']);
