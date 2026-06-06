@@ -35,7 +35,7 @@ class NewsController extends Controller
         // 1. Ambil data berita (DB 1 & Relasi DB 2/3)
         try {
             $query = News::query()
-                ->select('id', 'is_code', 'title', 'writer_id', 'created_at')
+                ->select('id', 'is_code', 'title', 'writer_id', 'created_at','distribution_status')
                 ->with([
                     'newsDaerah:id,is_code,title,status,cat_id',
                     'newsDaerah.kanal:id,name', // Sesuaikan kolom id & name dengan tabel KanalDaerah
