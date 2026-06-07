@@ -192,7 +192,6 @@ class NewsController extends Controller
                 ->where('writer_id', $user->id) // Keamanan: Pastikan writer hanya bisa melihat miliknya
                 ->firstOrFail(); // Jika tidak ditemukan, akan otomatis masuk ke catch block
 
-            dd($news);
 
             return Inertia::render('News/Show', [
                 'news' => $news
