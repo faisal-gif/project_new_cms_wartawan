@@ -75,12 +75,12 @@ export default function Index({ news, filters }) {
     function getDistributionBadge(status) {
         switch (Number(status)) {
             case 2:
-                return <Badge className="badge bg-success text-white">Sudah di Semua Jaringan</Badge>;
+                return <Badge className="bg-green-500 text-white">Sudah di Semua Jaringan</Badge>;
             case 1:
-                return <Badge className="badge bg-info text-white">Tayang Parsial (Salah Satu)</Badge>;
+                return <Badge className="bg-blue-500 text-white">Tayang Parsial (Salah Satu)</Badge>;
             case 0:
             default:
-                return <Badge className="badge bg-secondary text-gray-500">Draft / Belum Tayang</Badge>;
+                return <Badge className="bg-gray-500 text-white">Draft / Belum Tayang</Badge>;
         }
     }
 
