@@ -73,13 +73,14 @@ export default function Index({ news, filters }) {
 
     // Helper BARU untuk Distribution Status Utama
     function getDistributionBadge(status) {
-        switch (status) {
-            case 'published':
-                return <Badge className="bg-emerald-500 hover:bg-emerald-600 shadow-sm">Published</Badge>;
-            case 'draft':
-                return <Badge variant="secondary" className="shadow-sm">Draft</Badge>;
+        switch (Number(status)) {
+            case 2:
+                return <Badge className="badge bg-success text-white">Sudah di Semua Jaringan</Badge>;
+            case 1:
+                return <Badge className="badge bg-info text-white">Tayang Parsial (Salah Satu)</Badge>;
+            case 0:
             default:
-                return <Badge variant="outline" className="shadow-sm">{status || 'Unknown'}</Badge>;
+                return <Badge className="badge bg-secondary text-gray-500">Draft / Belum Tayang</Badge>;
         }
     }
 
@@ -222,7 +223,7 @@ export default function Index({ news, filters }) {
                                                             {getDistributionBadge(item.distribution_status)}
                                                         </div>
                                                     </TableCell>
-                                                    
+
                                                     {/* Kolom Daerah Desktop */}
                                                     <TableCell className="align-top">
                                                         {item.news_daerah ? (
@@ -272,7 +273,7 @@ export default function Index({ news, filters }) {
                                                     <TableCell className="text-right text-muted-foreground text-xs align-top pt-5">
                                                         {formatDate(item.created_at)}
                                                     </TableCell>
-                                                    
+
                                                     {/* Kolom Aksi */}
                                                     <TableCell className="text-center align-top pt-4">
                                                         <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50">
