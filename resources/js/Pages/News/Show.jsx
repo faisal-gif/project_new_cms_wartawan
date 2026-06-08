@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
-import { ArrowLeft, CheckCircle2, Clock, Globe, MapPin, Tag } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, Globe, MapPin, MessageSquare, Tag } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 
 export default function Show({ news }) {
@@ -148,6 +148,57 @@ export default function Show({ news }) {
                                     ) : (
                                         <p className="text-sm text-muted-foreground italic">Belum ada tag yang ditambahkan.</p>
                                     )}
+                                </CardContent>
+                            </Card>
+
+                            {/* Card Catatan Internal / Redaksi */}
+                            <Card className="border-muted shadow-sm">
+                                <CardHeader className="pb-4 border-b px-6 bg-muted/10 flex flex-row items-center justify-between">
+                                    <CardTitle className="text-lg flex items-center">
+                                        <MessageSquare className="w-4 h-4 mr-2" /> Catatan Internal
+                                    </CardTitle>
+                                    <Badge variant="secondary">{news.notes?.length || 0}</Badge>
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    {/* Area Daftar Catatan */}
+                                    <div className="max-h-[300px] overflow-y-auto p-6 space-y-4 bg-muted/5">
+                                        {news.notes && news.notes.length > 0 ? (
+                                            news.notes.map((note) => (
+                                                <div key={note.id} className="space-y-1.5 bg-background p-3 rounded-lg border shadow-sm">
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-semibold text-xs text-foreground">
+                                                                {note.user?.name || 'User'}
+                                                            </span>
+                                                            {/* Menampilkan Role dari Spatie */}
+                                                            {note.user?.roles && note.user.roles.length > 0 && (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="text-[9px] px-1.5 py-0 h-4 shadow-none font-medium tracking-wide uppercase bg-muted/50 text-muted-foreground"
+                                                                >
+                                                                    {note.user.roles[0].name}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <span className="text-[10px] text-muted-foreground shrink-0">
+                                                            {new Date(note.created_at).toLocaleDateString('id-ID', {
+                                                                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                                        {note.content}
+                                                    </p>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-6 text-muted-foreground text-sm italic">
+                                                Belum ada catatan untuk berita ini.
+                                            </div>
+                                        )}
+                                    </div>
+
+
                                 </CardContent>
                             </Card>
 

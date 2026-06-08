@@ -187,10 +187,13 @@ class NewsController extends Controller
                 'newsDaerah:id,is_code,title,status,cat_id',
                 'newsDaerah.kanal:id,name',
                 'newsNasional:news_id,is_code,news_title,news_status,catnews_id',
-                'newsNasional.kanal:catnews_id,catnews_title'
+                'newsNasional.kanal:catnews_id,catnews_title',
+                'notes.user:id,name',
+                'notes.user.roles:id,name'
             ])
                 ->where('writer_id', $user->id) // Keamanan: Pastikan writer hanya bisa melihat miliknya
                 ->firstOrFail(); // Jika tidak ditemukan, akan otomatis masuk ke catch block
+
 
 
             return Inertia::render('News/Show', [

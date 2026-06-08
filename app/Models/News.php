@@ -16,7 +16,7 @@ class News extends Model
         'content',
         'distribution_status',
     ];
-    
+
     public function tags()
     {
         return $this->belongsToMany(Tags::class, 'news_tags', 'news_id', 'tag_id');
@@ -31,5 +31,11 @@ class News extends Model
     public function newsNasional()
     {
         return $this->hasOne(NewsNasional::class, 'is_code', 'is_code');
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(NewsNote::class, 'news_id', 'id')->latest();
+       
     }
 }
