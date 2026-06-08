@@ -1,369 +1,348 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import Select from "react-select";
-import { Plus, Search } from 'lucide-react';
-
-// Components
-import Card from '@/Components/Card';
-import InputWithPrefix from '@/Components/InputWithPrefix';
-import PaginationDaisy from '@/Components/PaginationDaisy';
-import { Badge } from '@/Components/ui/badge';
+import { Button } from '@/Components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/Components/ui/pagination";
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, Link, router } from '@inertiajs/react';
 
-/* ==============================================================================
-   HELPER FUNCTIONS 
-   (Dipindah ke luar agar tidak re-render di setiap lifecycle komponen)
-============================================================================== */
-const getStatusBadge = (status) => {
-    switch (String(status).toLowerCase()) {
-        case "pending":
-        case "0":
-            return <Badge variant="secondary">Pending</Badge>;
-        case "review":
-        case "2":
-            return <Badge className="bg-yellow-300 text-yellow-700 hover:bg-yellow-400">Review</Badge>;
-        case "on pro":
-        case "3":
-            return <Badge variant="destructive">OnPro</Badge>;
-        case "publish":
-        case "1":
-            return <Badge className="bg-green-300 text-green-700 hover:bg-green-400">Publish</Badge>;
-        default:
-            return <Badge variant="neutral">{status}</Badge>;
-    }
-};
+import React, { useState, useEffect } from 'react';
+// TAMBAHKAN MessageSquare DI SINI
+import { Plus, Search, Eye, MessageSquare } from 'lucide-react';
+import { Input } from '@/Components/ui/input';
+import { Badge } from '@/Components/ui/badge';
 
-const getDistributionBadge = (status) => {
-    switch (Number(status)) {
-        case 2:
-            return <Badge className="badge bg-success text-white border-none">Sudah di Semua Jaringan</Badge>;
-        case 1:
-            return <Badge className="badge bg-info text-white border-none">Tayang Parsial</Badge>;
-        case 0:
-        default:
-            return <Badge className="badge bg-secondary text-gray-500 border-none">Draft / Belum Tayang</Badge>;
-    }
-};
+export default function Index({ news, filters }) {
+    const [searchTerm, setSearchTerm] = useState(filters?.search || '');
 
-/* ==============================================================================
-   SUB-COMPONENTS (Idealnya bisa dipisah ke file terpisah di folder components)
-============================================================================== */
-
-// --- 1. Mobile Card View ---
-const NewsMobileCard = ({ item, hasPermission }) => (
-    <div className="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
-        <div className="card-body p-4 sm:p-5 gap-0">
-            {/* Header: Title */}
-            <div className="flex justify-between items-start gap-3 mb-2">
-                <h3 className="text-xs font-medium leading-snug whitespace-normal break-words">
-                    {item.title}
-                </h3>
-            </div>
-
-            {/* Meta Info */}
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-base-content/70 mb-4">
-                <span className="font-semibold text-primary">{item.writer?.name || 'Unknown'}</span>
-            </div>
-
-            {/* Integration Status */}
-            <div className="bg-base-200/50 rounded-lg p-3 flex flex-col gap-4 mb-4">
-                {/* Daerah */}
-                {hasPermission('import daerah news master') && (
-                    <div className="flex flex-col gap-2">
-                        <span className="text-xs font-semibold text-base-content/80">Distribusi Daerah</span>
-                        {item.news_daerah ? (
-                            <div className="flex justify-between items-center bg-base-100 p-2 rounded border border-base-200">
-                                <div className="flex flex-col">
-                                    <span className="text-[11px] font-bold text-success flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-success"></span> Terindeks
-                                    </span>
-                                    <span className="text-[11px] text-base-content/70 truncate max-w-[150px]">
-                                        {item.news_daerah.kanal?.name || 'Daerah'}
-                                    </span>
-                                </div>
-                                <Link href={route('admin.daerah.news.edit', item.news_daerah.id)} className="btn btn-xs btn-warning btn-outline">
-                                    Edit
-                                </Link>
-                            </div>
-                        ) : (
-                            <Link href={route('admin.news.import.daerah', item.is_code)} className="btn btn-xs btn-info btn-outline self-start">
-                                + Daerah
-                            </Link>
-                        )}
-                    </div>
-                )}
-
-                <div className="border-t border-base-300"></div>
-
-                {/* Nasional */}
-                {hasPermission('import nasional news master') && (
-                    <div className="flex flex-col gap-2">
-                        <span className="text-xs font-semibold text-base-content/80">Distribusi Nasional</span>
-                        {item.news_nasional ? (
-                            <div className="flex justify-between items-center bg-base-100 p-2 rounded border border-base-200">
-                                <div className="flex flex-col">
-                                    <span className="text-[11px] font-bold text-success flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-success"></span> Terindeks
-                                    </span>
-                                    <span className="text-[11px] text-base-content/70 truncate max-w-[150px]">
-                                        {item.news_nasional.kanal?.catnews_title || 'Nasional'}
-                                    </span>
-                                </div>
-                                <Link href={route('admin.nasional.news.edit', item.news_nasional.news_id)} className="btn btn-xs btn-warning btn-outline">
-                                    Edit
-                                </Link>
-                            </div>
-                        ) : (
-                            <Link href={route('admin.news.import.nasional', item.is_code)} className="btn btn-xs btn-info btn-outline self-start">
-                                + Nasional
-                            </Link>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            <div className="flex items-center justify-center gap-2 text-xs text-base-content/70 mb-2">
-                {getDistributionBadge(item.distribution_status)}
-            </div>
-
-            {/* Actions */}
-            <div className="card-actions justify-end mt-2">
-                <Link href={route('admin.news.show', item.id)} className="btn btn-sm btn-primary w-full sm:w-auto">
-                    Detail Berita
-                </Link>
-            </div>
-        </div>
-    </div>
-);
-
-// --- 2. Desktop Table Row View ---
-const NewsDesktopRow = ({ item, hasPermission }) => (
-    <tr>
-        <th>{item.id}</th>
-        <td>{item.writer?.name || 'Unknown'}</td>
-        <td>
-            <p className="font-medium truncate max-w-xs" title={item.title}>{item.title}</p>
-        </td>
-
-        {/* Kolom Daerah */}
-        {hasPermission('import daerah news master') && (
-            <td>
-                {item.news_daerah ? (
-                    <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between gap-2">
-                            <span className="text-[11px] font-bold text-success">Terindeks</span>
-                            <Link href={route('admin.daerah.news.edit', item.news_daerah.id)} className="btn btn-xs btn-warning btn-outline h-6 min-h-0">
-                                Edit
-                            </Link>
-                        </div>
-                        <span className="text-[11px] leading-tight text-base-content/80 truncate max-w-[150px]" title={item.news_daerah.title}>
-                            {item.news_daerah.title}
-                        </span>
-                        <div className="flex items-center gap-1">
-                            <span className="badge badge-xs badge-ghost italic">{item.news_daerah.kanal?.name}</span>
-                            {getStatusBadge(item.news_daerah.status)}
-                        </div>
-                    </div>
-                ) : (
-                    <Link href={route('admin.news.import.daerah', item.is_code)} className="btn btn-xs btn-info btn-outline">
-                        + Daerah
-                    </Link>
-                )}
-            </td>
-        )}
-
-        {/* Kolom Nasional */}
-        {hasPermission('import nasional news master') && (
-            <td>
-                {item.news_nasional ? (
-                    <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between gap-2">
-                            <span className="text-[11px] font-bold text-success">Terindeks</span>
-                            <Link href={route('admin.nasional.news.edit', item.news_nasional.news_id)} className="btn btn-xs btn-warning btn-outline h-6 min-h-0">
-                                Edit
-                            </Link>
-                        </div>
-                        <span className="text-[11px] leading-tight text-base-content/80 truncate max-w-[150px]">
-                            {item.news_nasional.news_title || '-'}
-                        </span>
-                        <div className="flex items-center gap-1">
-                            <span className="badge badge-xs badge-ghost italic">{item.news_nasional.kanal?.catnews_title || 'Nasional'}</span>
-                            {getStatusBadge(item.news_nasional.news_status)}
-                        </div>
-                    </div>
-                ) : (
-                    <Link href={route('admin.news.import.nasional', item.is_code)} className="btn btn-xs btn-info btn-outline">
-                        + Nasional
-                    </Link>
-                )}
-            </td>
-        )}
-
-        <td className="text-center">
-            {getDistributionBadge(item.distribution_status)}
-        </td>
-
-        {hasPermission('edit news master') && (
-            <td>
-                <div className="flex justify-end gap-2">
-                    <Link href={route('admin.news.show', item.id)} className="btn btn-sm btn-primary btn-outline">Detail</Link>
-                </div>
-            </td>
-        )}
-    </tr>
-);
-
-
-/* ==============================================================================
-   MAIN COMPONENT
-============================================================================== */
-export default function Index({ news, writers, kanals, filters }) {
-    const { auth } = usePage().props;
-    const userPermissions = auth.permissions || [];
-    const isFirst = useRef(true);
-    
-    // State Filters
-    const [search, setSearch] = useState(() => filters.search || '');
-    const [writer, setWriter] = useState(() => filters.writer || '');
-
-    const INDEX_ROUTE = route('admin.news.index');
-
-    // Helper: Cek Permisi User
-    const hasPermission = (permissions) => {
-        if (Array.isArray(permissions)) {
-            return permissions.some(permission => userPermissions.includes(permission));
-        }
-        return userPermissions.includes(permissions);
-    };
-
-    // Effect: Handle Pencarian & Filtering (Debounced)
     useEffect(() => {
-        if (isFirst.current) {
-            isFirst.current = false;
-            return;
-        }
-
         const timeout = setTimeout(() => {
-            router.get(
-                INDEX_ROUTE,
-                { search, writer, page: 1 },
-                { preserveState: true, replace: true }
-            );
-        }, search !== filters.search ? 400 : 0); // Hanya debounce untuk ketikan search
+            if (searchTerm !== (filters?.search || '')) {
+                router.get(
+                    route(route().current()),
+                    { search: searchTerm },
+                    {
+                        preserveState: true,
+                        preserveScroll: true,
+                        replace: true
+                    }
+                );
+            }
+        }, 300);
 
         return () => clearTimeout(timeout);
-    }, [search, writer]);
+    }, [searchTerm, filters?.search]);
 
-    // Handle Reset Filter
-    const handleReset = () => {
-        setSearch('');
-        setWriter('');
-        router.get(INDEX_ROUTE, { search: '', writer: '', page: 1 }, { preserveState: true, replace: true });
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
+
+    // Helper untuk status Daerah & Nasional
+    function getStatusBadge(status) {
+        switch (status) {
+            case "pending":
+            case '0':
+            case 0:
+                return <Badge variant="secondary" className="shadow-none text-[10px]">Pending</Badge>;
+            case "Review":
+            case '2':
+            case 2:
+                return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 shadow-none border-yellow-200 text-[10px]">Review</Badge>;
+            case "On Pro":
+            case '3':
+            case 3:
+                return <Badge variant="destructive" className="shadow-none text-[10px]">OnPro</Badge>;
+            case "Publish":
+            case '1':
+            case 1:
+                return <Badge className="bg-green-100 text-green-800 hover:bg-green-200 shadow-none border-green-200 text-[10px]">Publish</Badge>;
+            default:
+                return <Badge variant="outline" className="shadow-none text-[10px]">{status}</Badge>;
+        }
+    }
+
+    // Helper untuk Distribution Status Utama
+    function getDistributionBadge(status) {
+        switch (Number(status)) {
+            case 2:
+                return <Badge className="bg-green-500 text-white shadow-none text-[10px] font-medium">Sudah di Semua Jaringan</Badge>;
+            case 1:
+                return <Badge className="bg-blue-500 text-white shadow-none text-[10px] font-medium">Tayang Parsial</Badge>;
+            case 0:
+            default:
+                return <Badge variant="secondary" className="shadow-none text-[10px] font-medium">Draft / Belum Tayang</Badge>;
+        }
+    }
 
     return (
         <AuthenticatedLayout>
-            <Head title="News Management" />
-            
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
-                    
-                    {/* Header & Breadcrumbs */}
-                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                        <h1 className="text-3xl font-bold text-foreground">Daftar News</h1>
-                        <div className="breadcrumbs text-sm">
-                            <ul>
-                                <li><Link href="#">Home</Link></li>
-                                <li>News</li>
-                            </ul>
-                        </div>
-                    </div>
+            <Head title="Daftar Berita" />
 
-                    {/* Tombol Aksi Utama */}
-                    {hasPermission('create news master') && (
-                        <div className="flex justify-end md:justify-start">
-                            <Link href={route('admin.news.create')} className="btn btn-primary rounded-lg">
-                                <Plus size={16} /> Tambah News
-                            </Link>
-                        </div>
-                    )}
+            <div className="py-6 sm:py-12 bg-muted/30 min-h-screen">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <Card className="shadow-sm border-muted">
+                        <CardHeader className="px-4 sm:px-6 border-b pb-4 bg-muted/10">
+                            <CardTitle>Manajemen Berita</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 sm:p-6 space-y-5">
 
-                    {/* Filter Section */}
-                    <Card>
-                        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
-                            <div className="w-full md:w-96">
-                                <InputWithPrefix
-                                    prefix={<Search size={16} />}
-                                    placeholder="Search Title and Id..."
-                                    className="w-full"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                />
+                            {/* Toolbar Pencarian & Tambah Berita */}
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                <div className="relative flex-1 max-w-md">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Cari judul berita atau ID..."
+                                        className="pl-9 bg-background"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                                <Button asChild className="w-full md:w-auto shadow-sm">
+                                    <Link href={route('news.create')}>
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Tulis Berita
+                                    </Link>
+                                </Button>
                             </div>
-                            <div className="w-full md:w-48 z-20">
-                                <Select
-                                    options={writers}
-                                    value={writers.find(w => w.value === writer) || null}
-                                    placeholder="Penulis"
-                                    onChange={(e) => setWriter(e ? e.value : '')}
-                                    isClearable
-                                />
+
+                            {/* =========================================
+                                TAMPILAN MOBILE (KARTU)
+                            ========================================== */}
+                            <div className="flex flex-col gap-4 md:hidden">
+                                {news.data.length > 0 ? (
+                                    news.data.map((item) => (
+                                        <Card key={item.id} className="shadow-sm overflow-hidden border-muted">
+                                            <CardContent className="p-4 space-y-3">
+                                                {/* Header Kartu: ID, Tanggal */}
+                                                <div className="flex justify-between items-start border-b pb-2">
+                                                    <div className="space-y-1">
+                                                        <span className="text-xs font-semibold text-muted-foreground">ID: #{item.id}</span>
+                                                        <div className="text-[11px] text-muted-foreground flex items-center">
+                                                            {formatDate(item.created_at)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Judul Utama Berita -> Tautan ke halaman Show */}
+                                                <Link href={route('news.show', item.id)} className="block group">
+                                                    <h3 className="font-semibold text-sm leading-snug group-hover:text-blue-600 group-hover:underline transition-colors line-clamp-2">
+                                                        {item.title}
+                                                    </h3>
+                                                </Link>
+
+                                                {/* Status Distribusi & Notifikasi Catatan */}
+                                                <div className="flex flex-wrap items-center gap-2 pt-1 pb-2 border-b border-dashed">
+                                                    {getDistributionBadge(item.distribution_status)}
+                                                    {item.notes_count > 0 && (
+                                                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 shadow-none border-orange-200 text-[10px] flex items-center gap-1 font-medium">
+                                                            <MessageSquare className="w-3 h-3" />
+                                                            {item.notes_count} Catatan
+                                                        </Badge>
+                                                    )}
+                                                </div>
+
+                                                {/* Status Daerah & Nasional */}
+                                                <div className="grid grid-cols-2 gap-3 pt-1">
+                                                    {/* Blok Daerah */}
+                                                    <div className="space-y-1.5">
+                                                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Daerah</span>
+                                                        {item.news_daerah ? (
+                                                            <div className="p-2 border rounded-md bg-muted/10 space-y-1.5 h-full">
+                                                                <p className="text-[11px] font-medium line-clamp-2 leading-tight" title={item.news_daerah.title}>
+                                                                    {item.news_daerah.title}
+                                                                </p>
+                                                                <div className="flex flex-wrap items-center gap-1">
+                                                                    <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 shadow-none bg-background">
+                                                                        {item.news_daerah.kanal?.name}
+                                                                    </Badge>
+                                                                    {getStatusBadge(item.news_daerah.status)}
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <Badge variant="destructive" className="shadow-none text-[10px] w-full justify-center">N/A</Badge>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Blok Nasional */}
+                                                    <div className="space-y-1.5">
+                                                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Nasional</span>
+                                                        {item.news_nasional ? (
+                                                            <div className="p-2 border rounded-md bg-muted/10 space-y-1.5 h-full">
+                                                                <p className="text-[11px] font-medium line-clamp-2 leading-tight" title={item.news_nasional.news_title}>
+                                                                    {item.news_nasional.news_title || '-'}
+                                                                </p>
+                                                                <div className="flex flex-wrap items-center gap-1">
+                                                                    <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 shadow-none bg-background">
+                                                                        {item.news_nasional.kanal?.catnews_title || 'Nasional'}
+                                                                    </Badge>
+                                                                    {getStatusBadge(item.news_nasional.news_status)}
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <Badge variant="destructive" className="shadow-none text-[10px] w-full justify-center">N/A</Badge>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-10 border border-dashed rounded-lg text-muted-foreground text-sm bg-muted/10">
+                                        {searchTerm ? 'Berita tidak ditemukan.' : 'Belum ada berita.'}
+                                    </div>
+                                )}
                             </div>
-                            <button type="button" className="btn btn-neutral w-full md:w-auto md:ml-2" onClick={handleReset}>
-                                Reset
-                            </button>
-                        </div>
+
+                            {/* =========================================
+                                TAMPILAN DESKTOP (TABEL)
+                            ========================================== */}
+                            <div className="hidden md:block border rounded-md overflow-hidden shadow-sm">
+                                <Table className="w-full table-fixed">
+                                    <TableHeader className="bg-muted/30">
+                                        <TableRow>
+                                            {/* Gunakan persentase (%) agar total mendekati/pas 100% */}
+                                            <TableHead className="w-[5%]">ID</TableHead>
+                                            <TableHead className="w-[35%]">Judul & Status</TableHead>
+                                            <TableHead className="w-[25%]">Daerah</TableHead>
+                                            <TableHead className="w-[25%]">Nasional</TableHead>
+                                            <TableHead className="w-[10%] text-right hidden lg:table-cell">Tanggal</TableHead>
+                                            <TableHead className="w-[5%] text-center">Aksi</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {news.data.length > 0 ? (
+                                            news.data.map((item) => (
+                                                <TableRow key={item.id} className="group hover:bg-muted/10">
+                                                    <TableCell className="font-medium text-muted-foreground align-top pt-5">
+                                                        #{item.id}
+                                                    </TableCell>
+
+                                                    {/* Kolom Judul, Status & Indikator Note */}
+                                                    <TableCell className="align-top pt-5">
+                                                        <div className="space-y-2.5">
+                                                            <Link href={route('news.show', item.id)} className="font-semibold text-foreground leading-snug block hover:text-blue-600 hover:underline transition-colors whitespace-normal break-words">
+                                                                {item.title}
+                                                            </Link>
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                {getDistributionBadge(item.distribution_status)}
+
+                                                                {/* LOGIKA CATATAN (NOTE COUNT) */}
+                                                                {item.notes_count > 0 && (
+                                                                    <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 shadow-none border-orange-200 text-[10px] flex items-center gap-1 font-medium">
+                                                                        <MessageSquare className="w-3 h-3" />
+                                                                        {item.notes_count} Catatan
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+
+                                                    {/* Kolom Daerah Desktop */}
+                                                    <TableCell className="align-top">
+                                                        {item.news_daerah ? (
+                                                            <Card className="shadow-none border bg-background group-hover:border-muted-foreground/30 transition-colors">
+                                                                <CardContent className="p-3 space-y-2">
+                                                                    <p className="text-xs font-medium leading-snug whitespace-normal break-words" title={item.news_daerah.title}>
+                                                                        {item.news_daerah.title}
+                                                                    </p>
+                                                                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t">
+                                                                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-medium shadow-none">
+                                                                            {item.news_daerah.kanal?.name}
+                                                                        </Badge>
+                                                                        {getStatusBadge(item.news_daerah.status)}
+                                                                    </div>
+                                                                </CardContent>
+                                                            </Card>
+                                                        ) : (
+                                                            <div className="h-full min-h-[70px] flex items-center justify-center border border-dashed rounded-md bg-muted/20 text-muted-foreground text-xs italic">
+                                                                Tidak didistribusikan
+                                                            </div>
+                                                        )}
+                                                    </TableCell>
+
+                                                    {/* Kolom Nasional Desktop */}
+                                                    <TableCell className="align-top">
+                                                        {item.news_nasional ? (
+                                                            <Card className="shadow-none border bg-background group-hover:border-muted-foreground/30 transition-colors">
+                                                                <CardContent className="p-3 space-y-2">
+                                                                    <p className="text-xs font-medium leading-snug whitespace-normal break-words" title={item.news_nasional.news_title}>
+                                                                        {item.news_nasional.news_title || '-'}
+                                                                    </p>
+                                                                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t">
+                                                                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-medium shadow-none">
+                                                                            {item.news_nasional.kanal?.catnews_title || 'Nasional'}
+                                                                        </Badge>
+                                                                        {getStatusBadge(item.news_nasional.news_status)}
+                                                                    </div>
+                                                                </CardContent>
+                                                            </Card>
+                                                        ) : (
+                                                            <div className="h-full min-h-[70px] flex items-center justify-center border border-dashed rounded-md bg-muted/20 text-muted-foreground text-xs italic">
+                                                                Tidak didistribusikan
+                                                            </div>
+                                                        )}
+                                                    </TableCell>
+
+                                                    <TableCell className="text-right text-muted-foreground text-xs align-top pt-5">
+                                                        {formatDate(item.created_at)}
+                                                    </TableCell>
+
+                                                    {/* Kolom Aksi */}
+                                                    <TableCell className="text-center align-top pt-4">
+                                                        <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50">
+                                                            <Link href={route('news.show', item.id)} title="Lihat Detail">
+                                                                <Eye className="h-4 w-4" />
+                                                            </Link>
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={6} className="h-32 text-center text-muted-foreground bg-muted/10">
+                                                    {searchTerm ? 'Berita tidak ditemukan.' : 'Belum ada berita.'}
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+
+                            {/* Pagination */}
+                            <div className="pt-2">
+                                <Pagination className="justify-between sm:justify-end">
+                                    <PaginationContent className="w-full sm:w-auto justify-between shadow-sm rounded-md border bg-background">
+                                        <PaginationItem>
+                                            <PaginationPrevious
+                                                href={news.prev_page_url || "#"}
+                                                className={!news.prev_page_url ? "pointer-events-none opacity-50 text-muted-foreground" : "hover:bg-muted"}
+                                            />
+                                        </PaginationItem>
+                                        <PaginationItem>
+                                            <PaginationNext
+                                                href={news.next_page_url || "#"}
+                                                className={!news.next_page_url ? "pointer-events-none opacity-50 text-muted-foreground" : "hover:bg-muted"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                            </div>
+
+                        </CardContent>
                     </Card>
-
-                    {/* Content Section (Table & Cards) */}
-                    <Card>
-                        {/* Mobile View */}
-                        <div className="md:hidden flex flex-col gap-4">
-                            {news.data.length > 0 ? (
-                                news.data.map((n) => (
-                                    <NewsMobileCard key={n.id} item={n} hasPermission={hasPermission} />
-                                ))
-                            ) : (
-                                <div className="text-center py-8 text-base-content/50">Data tidak ditemukan.</div>
-                            )}
-                        </div>
-
-                        {/* Desktop View */}
-                        <div className="hidden md:block overflow-x-auto min-h-[400px]">
-                            <table className="table table-zebra w-full">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Penulis</th>
-                                        <th className="w-1/3">Judul</th>
-                                        {hasPermission('import daerah news master') && <th>Daerah</th>}
-                                        {hasPermission('import nasional news master') && <th>Nasional</th>}
-                                        <th className="text-center">Status Distribusi</th>
-                                        {hasPermission('edit news master') && <th className="text-right">Action</th>}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {news.data.length > 0 ? (
-                                        news.data.map((n) => (
-                                            <NewsDesktopRow key={n.id} item={n} hasPermission={hasPermission} />
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={7} className="text-center py-8 text-base-content/50">
-                                                Data tidak ditemukan.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </Card>
-
-                    {/* Pagination */}
-                    <PaginationDaisy data={news} />
-
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </AuthenticatedLayout >
     );
 }
