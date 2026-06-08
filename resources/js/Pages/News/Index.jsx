@@ -231,7 +231,7 @@ export default function Index({ news, filters }) {
                                                     {/* Kolom Judul, Status & Indikator Note */}
                                                     <TableCell className="align-top pt-5">
                                                         <div className="space-y-2.5">
-                                                            <Link href={route('news.show', item.id)} className="font-semibold text-foreground leading-snug block hover:text-blue-600 hover:underline transition-colors line-clamp-2">
+                                                            <Link href={route('news.show', item.id)} className="font-semibold text-foreground leading-snug block hover:text-blue-600 hover:underline transition-colors whitespace-normal break-words">
                                                                 {item.title}
                                                             </Link>
                                                             <div className="flex flex-wrap items-center gap-2">
@@ -253,7 +253,7 @@ export default function Index({ news, filters }) {
                                                         {item.news_daerah ? (
                                                             <Card className="shadow-none border bg-background group-hover:border-muted-foreground/30 transition-colors">
                                                                 <CardContent className="p-3 space-y-2">
-                                                                    <p className="text-xs font-medium leading-snug line-clamp-2" title={item.news_daerah.title}>
+                                                                    <p className="text-xs font-medium leading-snug whitespace-normal break-words" title={item.news_daerah.title}>
                                                                         {item.news_daerah.title}
                                                                     </p>
                                                                     <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t">
@@ -276,7 +276,7 @@ export default function Index({ news, filters }) {
                                                         {item.news_nasional ? (
                                                             <Card className="shadow-none border bg-background group-hover:border-muted-foreground/30 transition-colors">
                                                                 <CardContent className="p-3 space-y-2">
-                                                                    <p className="text-xs font-medium leading-snug line-clamp-2" title={item.news_nasional.news_title}>
+                                                                    <p className="text-xs font-medium leading-snug whitespace-normal break-words" title={item.news_nasional.news_title}>
                                                                         {item.news_nasional.news_title || '-'}
                                                                     </p>
                                                                     <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t">
