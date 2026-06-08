@@ -13,7 +13,7 @@ export default function LoginForm() {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
-        remember: false,
+        remember: true,
     });
 
     // State untuk toggle lihat password
@@ -103,23 +103,7 @@ export default function LoginForm() {
                         )}
                     </div>
 
-                    {/* Field Remember Me */}
-                    <div className="flex items-center space-x-3 pt-2">
-                        <Checkbox
-                            id="remember"
-                            name="remember"
-                            checked={data.remember}
-                            onCheckedChange={(checked) => setData('remember', checked)}
-                            // Membuat checkbox sedikit lebih bulat sesuai desain modern
-                            className="rounded-sm border-gray-400 data-[state=checked]:bg-[#473bea] data-[state=checked]:border-[#473bea]"
-                        />
-                        <Label
-                            htmlFor="remember"
-                            className="text-sm font-normal text-gray-600 cursor-pointer"
-                        >
-                            Remember me
-                        </Label>
-                    </div>
+                  
 
                     {/* Button Submit */}
                     <Button 
