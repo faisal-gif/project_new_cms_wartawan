@@ -188,7 +188,7 @@ class NewsController extends Controller
                 'newsDaerah.kanal:id,name',
                 'newsNasional:news_id,is_code,news_title,news_status,catnews_id',
                 'newsNasional.kanal:catnews_id,catnews_title',
-                'notes.user:id,name',
+                'notes.user:id,full_name',
                 'notes.user.roles:id,name'
             ])
                 ->where('writer_id', $user->id) // Keamanan: Pastikan writer hanya bisa melihat miliknya
