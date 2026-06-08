@@ -13,7 +13,7 @@ import { Head, Link, router } from '@inertiajs/react';
 
 import React, { useState, useEffect } from 'react';
 // TAMBAHKAN MessageSquare DI SINI
-import { Plus, Search, Eye, MessageSquare } from 'lucide-react'; 
+import { Plus, Search, Eye, MessageSquare } from 'lucide-react';
 import { Input } from '@/Components/ui/input';
 import { Badge } from '@/Components/ui/badge';
 
@@ -146,7 +146,7 @@ export default function Index({ news, filters }) {
                                                     {getDistributionBadge(item.distribution_status)}
                                                     {item.notes_count > 0 && (
                                                         <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 shadow-none border-orange-200 text-[10px] flex items-center gap-1 font-medium">
-                                                            <MessageSquare className="w-3 h-3" /> 
+                                                            <MessageSquare className="w-3 h-3" />
                                                             {item.notes_count} Catatan
                                                         </Badge>
                                                     )}
@@ -208,15 +208,16 @@ export default function Index({ news, filters }) {
                                 TAMPILAN DESKTOP (TABEL)
                             ========================================== */}
                             <div className="hidden md:block border rounded-md overflow-hidden shadow-sm">
-                                <Table>
+                                <Table className="w-full table-fixed">
                                     <TableHeader className="bg-muted/30">
                                         <TableRow>
-                                            <TableHead className="w-[80px]">ID</TableHead>
-                                            <TableHead className="min-w-[300px]">Judul & Status</TableHead>
-                                            <TableHead className="min-w-[200px]">Daerah</TableHead>
-                                            <TableHead className="min-w-[200px]">Nasional</TableHead>
-                                            <TableHead className="text-right w-[150px]">Tanggal Dibuat</TableHead>
-                                            <TableHead className="text-center w-[100px]">Aksi</TableHead>
+                                            {/* Gunakan persentase (%) agar total mendekati/pas 100% */}
+                                            <TableHead className="w-[5%]">ID</TableHead>
+                                            <TableHead className="w-[35%]">Judul & Status</TableHead>
+                                            <TableHead className="w-[25%]">Daerah</TableHead>
+                                            <TableHead className="w-[25%]">Nasional</TableHead>
+                                            <TableHead className="w-[10%] text-right hidden lg:table-cell">Tanggal</TableHead>
+                                            <TableHead className="w-[5%] text-center">Aksi</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -226,7 +227,7 @@ export default function Index({ news, filters }) {
                                                     <TableCell className="font-medium text-muted-foreground align-top pt-5">
                                                         #{item.id}
                                                     </TableCell>
-                                                    
+
                                                     {/* Kolom Judul, Status & Indikator Note */}
                                                     <TableCell className="align-top pt-5">
                                                         <div className="space-y-2.5">
@@ -235,11 +236,11 @@ export default function Index({ news, filters }) {
                                                             </Link>
                                                             <div className="flex flex-wrap items-center gap-2">
                                                                 {getDistributionBadge(item.distribution_status)}
-                                                                
+
                                                                 {/* LOGIKA CATATAN (NOTE COUNT) */}
                                                                 {item.notes_count > 0 && (
                                                                     <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 shadow-none border-orange-200 text-[10px] flex items-center gap-1 font-medium">
-                                                                        <MessageSquare className="w-3 h-3" /> 
+                                                                        <MessageSquare className="w-3 h-3" />
                                                                         {item.notes_count} Catatan
                                                                     </Badge>
                                                                 )}
