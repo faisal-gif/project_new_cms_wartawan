@@ -168,7 +168,7 @@ export default function Show({ news }) {
                                                     <div className="flex justify-between items-start mb-1">
                                                         <div className="flex items-center gap-2">
                                                             <span className="font-semibold text-xs text-foreground">
-                                                                {note.user?.name || 'User'}
+                                                                {note.user?.full_name || 'User'}
                                                             </span>
                                                             {/* Menampilkan Role dari Spatie */}
                                                             {note.user?.roles && note.user.roles.length > 0 && (
