@@ -12,7 +12,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Eye } from 'lucide-react';
+// TAMBAHKAN MessageSquare DI SINI
+import { Plus, Search, Eye, MessageSquare } from 'lucide-react'; 
 import { Input } from '@/Components/ui/input';
 import { Badge } from '@/Components/ui/badge';
 
@@ -71,16 +72,16 @@ export default function Index({ news, filters }) {
         }
     }
 
-    // Helper BARU untuk Distribution Status Utama
+    // Helper untuk Distribution Status Utama
     function getDistributionBadge(status) {
         switch (Number(status)) {
             case 2:
-                return <Badge className="bg-green-500 text-white">Sudah di Semua Jaringan</Badge>;
+                return <Badge className="bg-green-500 text-white shadow-none text-[10px] font-medium">Sudah di Semua Jaringan</Badge>;
             case 1:
-                return <Badge className="bg-blue-500 text-white">Tayang Parsial (Salah Satu)</Badge>;
+                return <Badge className="bg-blue-500 text-white shadow-none text-[10px] font-medium">Tayang Parsial</Badge>;
             case 0:
             default:
-                return <Badge className="bg-gray-500 text-white">Draft / Belum Tayang</Badge>;
+                return <Badge variant="secondary" className="shadow-none text-[10px] font-medium">Draft / Belum Tayang</Badge>;
         }
     }
 
@@ -123,15 +124,14 @@ export default function Index({ news, filters }) {
                                     news.data.map((item) => (
                                         <Card key={item.id} className="shadow-sm overflow-hidden border-muted">
                                             <CardContent className="p-4 space-y-3">
-                                                {/* Header Kartu: ID, Status Utama, Tanggal */}
-                                                <div className="flex justify-between items-start border-b pb-3">
+                                                {/* Header Kartu: ID, Tanggal */}
+                                                <div className="flex justify-between items-start border-b pb-2">
                                                     <div className="space-y-1">
                                                         <span className="text-xs font-semibold text-muted-foreground">ID: #{item.id}</span>
                                                         <div className="text-[11px] text-muted-foreground flex items-center">
                                                             {formatDate(item.created_at)}
                                                         </div>
                                                     </div>
-                                                    {getDistributionBadge(item.distribution_status)}
                                                 </div>
 
                                                 {/* Judul Utama Berita -> Tautan ke halaman Show */}
@@ -141,8 +141,19 @@ export default function Index({ news, filters }) {
                                                     </h3>
                                                 </Link>
 
+                                                {/* Status Distribusi & Notifikasi Catatan */}
+                                                <div className="flex flex-wrap items-center gap-2 pt-1 pb-2 border-b border-dashed">
+                                                    {getDistributionBadge(item.distribution_status)}
+                                                    {item.notes_count > 0 && (
+                                                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 shadow-none border-orange-200 text-[10px] flex items-center gap-1 font-medium">
+                                                            <MessageSquare className="w-3 h-3" /> 
+                                                            {item.notes_count} Catatan
+                                                        </Badge>
+                                                    )}
+                                                </div>
+
                                                 {/* Status Daerah & Nasional */}
-                                                <div className="grid grid-cols-2 gap-3 pt-2">
+                                                <div className="grid grid-cols-2 gap-3 pt-1">
                                                     {/* Blok Daerah */}
                                                     <div className="space-y-1.5">
                                                         <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Daerah</span>
@@ -201,7 +212,7 @@ export default function Index({ news, filters }) {
                                     <TableHeader className="bg-muted/30">
                                         <TableRow>
                                             <TableHead className="w-[80px]">ID</TableHead>
-                                            <TableHead className="min-w-[250px]">Judul & Status</TableHead>
+                                            <TableHead className="min-w-[300px]">Judul & Status</TableHead>
                                             <TableHead className="min-w-[200px]">Daerah</TableHead>
                                             <TableHead className="min-w-[200px]">Nasional</TableHead>
                                             <TableHead className="text-right w-[150px]">Tanggal Dibuat</TableHead>
@@ -215,12 +226,24 @@ export default function Index({ news, filters }) {
                                                     <TableCell className="font-medium text-muted-foreground align-top pt-5">
                                                         #{item.id}
                                                     </TableCell>
+                                                    
+                                                    {/* Kolom Judul, Status & Indikator Note */}
                                                     <TableCell className="align-top pt-5">
-                                                        <div className="space-y-2">
+                                                        <div className="space-y-2.5">
                                                             <Link href={route('news.show', item.id)} className="font-semibold text-foreground leading-snug block hover:text-blue-600 hover:underline transition-colors line-clamp-2">
                                                                 {item.title}
                                                             </Link>
-                                                            {getDistributionBadge(item.distribution_status)}
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                {getDistributionBadge(item.distribution_status)}
+                                                                
+                                                                {/* LOGIKA CATATAN (NOTE COUNT) */}
+                                                                {item.notes_count > 0 && (
+                                                                    <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 shadow-none border-orange-200 text-[10px] flex items-center gap-1 font-medium">
+                                                                        <MessageSquare className="w-3 h-3" /> 
+                                                                        {item.notes_count} Catatan
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </TableCell>
 
@@ -277,7 +300,7 @@ export default function Index({ news, filters }) {
                                                     {/* Kolom Aksi */}
                                                     <TableCell className="text-center align-top pt-4">
                                                         <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50">
-                                                            <Link href={route('news.show', item)} title="Lihat Detail">
+                                                            <Link href={route('news.show', item.id)} title="Lihat Detail">
                                                                 <Eye className="h-4 w-4" />
                                                             </Link>
                                                         </Button>
