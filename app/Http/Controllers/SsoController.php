@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Services\SsoService;
-use App\Models\User;
+use App\Models\Writer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,15 +24,18 @@ class SsoController extends Controller
         }
 
         // Cari user di database web baru karena dipastikan datanya sudah ada
-        $user = User::where('email', $email)->first();
+        $user = Writer::where('email', $email)->first();
 
         if (!$user) {
             // Fallback jika ternyata data belum tersinkronisasi
             abort(404, 'Akun Anda belum tersinkronisasi ke sistem baru.');
         }
 
-        // Login menggunakan facade Auth standar Laravel
-        Auth::login($user);
+        // Parameter kedua adalah $remember (boolean)
+        $rememberMe = true;
+
+        // Login user dengan instruksi "Remember Me"
+        Auth::login($user, $rememberMe);
 
         // Redirect ke halaman utama SPA Inertia/React Anda
         return redirect()->route('dashboard');
