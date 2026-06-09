@@ -50,6 +50,7 @@ class DashboardController extends Controller
             $tayangNasional = NewsNasional::where('journalist_id', $user->id_nasional)
                 ->where('news_status', 1)
                 ->count();
+                
         } catch (Exception $e) {
             Log::error('Dashboard Error: ' . $e->getMessage());
 

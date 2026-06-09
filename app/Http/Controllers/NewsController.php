@@ -104,7 +104,7 @@ class NewsController extends Controller
             $content = $request->content;
             $tagIds = [];
 
-            // 2. Proses Auto-Link Tag ke dalam Konten
+
             // 2. Proses Auto-Link Tag ke dalam Konten
             if ($request->has('tag') && is_array($request->tag)) {
                 foreach ($request->tag as $tagName) {
