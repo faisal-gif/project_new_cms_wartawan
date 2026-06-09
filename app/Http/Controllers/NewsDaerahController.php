@@ -25,7 +25,7 @@ class NewsDaerahController extends Controller
                 ->where('status',  1);
 
             $newsDaerah = $newsDaerah->latest()->simplePaginate(10)->withQueryString();
-
+dd($newsDaerah);
             return Inertia::render('Daerah/News/Index', [
                 'newsDaerah' => $newsDaerah,
             ]);
