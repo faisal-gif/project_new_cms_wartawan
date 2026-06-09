@@ -17,7 +17,7 @@ class NewsDaerahController extends Controller
 
         try {
             $newsDaerah = NewsDaerah::query()
-                ->select('id', 'is_code', 'title', 'writer_id', 'datepub', 'status')
+                ->select('id', 'is_code', 'title', 'writer_id','cat_id', 'datepub', 'status')
                 ->with([
                     'kanal:id,name',
                 ])
