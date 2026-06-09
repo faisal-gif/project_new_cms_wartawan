@@ -55,7 +55,7 @@ export default function Index({ news, filters }) {
         if (!url) return;
         
         // Buat URL absolut (menggabungkan domain saat ini dengan path relatif)
-        const fullUrl = `${window.location.origin}${url}`;
+        const fullUrl = `${url}`;
         
         navigator.clipboard.writeText(fullUrl).then(() => {
             setCopiedId(id);
