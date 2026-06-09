@@ -32,7 +32,12 @@ export default function InputEditor({
                 // 3. Konfigurasi Fitur Lengkap
                 init={{
                     license_key: 'gpl',
-                    height: height,
+                    min_height: 300,
+                    max_height: height,
+                    mobile: {
+                        max_height: 450,
+                        toolbar_mode: 'wrap',
+                    },
                     menubar: false,
                     toolbar_mode: 'wrap',
                     forced_root_block: 'p',
