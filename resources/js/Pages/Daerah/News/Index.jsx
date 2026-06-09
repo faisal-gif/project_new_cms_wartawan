@@ -89,10 +89,10 @@ export default function Index({ newsDaerah, error }) {
                                                     </Badge>
 
                                                     <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-muted-foreground hover:text-blue-600">
-                                                        <Link href={route('news-daerah.show', item.id)}>
+                                                        {/* <Link href={route('news-daerah.show', item.id)}>
                                                             <Eye className="h-3.5 w-3.5 mr-1" />
                                                             Detail
-                                                        </Link>
+                                                        </Link> */}
                                                     </Button>
                                                 </div>
                                             </CardContent>
@@ -149,9 +149,9 @@ export default function Index({ newsDaerah, error }) {
                                                     <TableCell className="text-center">
                                                         <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50">
                                                             {/* Sesuaikan nama route detail daerah Anda */}
-                                                            <Link href={route('news-daerah.show', item.id)} title="Lihat Detail">
+                                                            {/* <Link href={route('news-daerah.show', item.id)} title="Lihat Detail">
                                                                 <Eye className="h-4 w-4" />
-                                                            </Link>
+                                                            </Link> */}
                                                         </Button>
                                                     </TableCell>
                                                 </TableRow>
