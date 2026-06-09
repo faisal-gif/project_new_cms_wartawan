@@ -70,7 +70,7 @@ class NewsController extends Controller
                     $slugTitle = Str::slug($item->newsNasional->news_title);
 
                     // Injeksi properti url ke dalam object newsNasional
-                    $item->newsNasional->url = "/{$slugKanal}/{$item->newsNasional->news_id}/{$slugTitle}";
+                    $item->newsNasional->url = "https://timesindonesia.co.id/{$slugKanal}/{$item->newsNasional->news_id}/{$slugTitle}";
                 }
 
                 return $item;
