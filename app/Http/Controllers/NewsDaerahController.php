@@ -26,12 +26,12 @@ class NewsDaerahController extends Controller
 
             $newsDaerah = $newsDaerah->latest()->simplePaginate(10)->withQueryString();
 
-            return Inertia::render('News/Daerah/Index', [
+            return Inertia::render('Daerah/News/Index', [
                 'newsDaerah' => $newsDaerah,
             ]);
         } catch (QueryException $e) {
             Log::error('Error fetching news daerah: ' . $e->getMessage());
-            return Inertia::render('News/Daerah/Index', [
+            return Inertia::render('Daerah/News/Index', [
                 'newsDaerah' => [],
                 'error' => 'Terjadi kesalahan saat mengambil data news daerah.',
             ]);
