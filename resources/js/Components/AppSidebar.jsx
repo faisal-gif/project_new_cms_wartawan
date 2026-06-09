@@ -67,6 +67,16 @@ function AppSidebar() {
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         </SidebarMenu>
+                           <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isActive(['daerah.news.index'])}>
+                                    <Link href={route('daerah.news.index')} >
+                                        <Newspaper className="w-4 h-4" />
+                                        News Daerah
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>

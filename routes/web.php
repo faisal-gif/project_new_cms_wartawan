@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\NewsDaerahController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SsoController;
 use App\Http\Controllers\TextEditorController;
@@ -22,6 +23,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware('auth')->prefix('daerah')->name('daerah.')->group(function () {
+    Route::get('/news', [NewsDaerahController::class, 'index'])->name('news.index');
+});
+
+Route::middleware('auth')->prefix('nasional')->name('nasional.')->group(function () {
+    // Route::get('/news', [NewsNasionalController::class, 'index'])->name('news.index'); --- IGNORE ---
 });
 
 require __DIR__ . '/auth.php';
