@@ -3,8 +3,9 @@ import { ImageIcon, XIcon, Loader2 } from "lucide-react";
 import ReactCrop, { centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import imageCompression from "browser-image-compression";
+import heic2any from "heic2any"; // Tambahkan import heic2any
 
-// Komponen shadcn/ui (Sesuaikan path import jika perlu)
+// Komponen shadcn/ui
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/Components/ui/dialog";
 import { Button } from "@/Components/ui/button";
 import { Label } from "@/Components/ui/label";
@@ -68,29 +69,60 @@ export default function InputImage({
         setPreview(null);
     }, [value, existingImage, isDeleted]);
 
-    const handleSelect = (e) => {
+    // Fungsi handleSelect yang dimodifikasi untuk mendukung HEIC
+    const handleSelect = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         setIsDeleted(false);
+        setIsProcessing(true); // Aktifkan state loading saat konversi HEIC berlangsung
 
-        if (!enableCrop) {
-            processOriginalImage(file);
-            if (inputRef.current) inputRef.current.value = "";
-            return;
-        }
+        try {
+            let fileToProcess = file;
 
-        const reader = new FileReader();
-        reader.addEventListener("load", () => {
-            setCropData({
-                src: reader.result?.toString() || "",
-                fileName: file.name,
-                originalFile: file,
+            // 1. Deteksi dan Konversi Format HEIC/HEIF
+            const isHeic = file.type === "image/heic" 
+                        || file.type === "image/heif" 
+                        || file.name.toLowerCase().endsWith(".heic");
+
+            if (isHeic) {
+                const convertedBlob = await heic2any({
+                    blob: file,
+                    toType: "image/jpeg",
+                    quality: 0.9
+                });
+
+                const finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+                const newFileName = file.name.replace(/\.heic|\.heif/gi, ".jpg");
+                fileToProcess = new File([finalBlob], newFileName, { type: "image/jpeg" });
+            }
+
+            // 2. Jika fitur crop dimatikan, langsung proses kompresi
+            if (!enableCrop) {
+                await processOriginalImage(fileToProcess);
+                if (inputRef.current) inputRef.current.value = "";
+                setIsProcessing(false);
+                return;
+            }
+
+            // 3. Jika fitur crop aktif, baca file dan tampilkan modal
+            const reader = new FileReader();
+            reader.addEventListener("load", () => {
+                setCropData({
+                    src: reader.result?.toString() || "",
+                    fileName: fileToProcess.name,
+                    originalFile: fileToProcess,
+                });
+                setIsProcessing(false);
             });
-        });
-        reader.readAsDataURL(file);
+            reader.readAsDataURL(fileToProcess);
 
-        if (inputRef.current) inputRef.current.value = "";
+            if (inputRef.current) inputRef.current.value = "";
+
+        } catch (error) {
+            console.error("Gagal memproses gambar (HEIC conversion):", error);
+            setIsProcessing(false);
+        }
     };
 
     const onImageLoad = (e) => {
@@ -178,22 +210,37 @@ export default function InputImage({
                             removeImage();
                         }}
                         className="absolute top-3 right-3 h-8 w-8 rounded-full shadow-lg opacity-90 hover:opacity-100"
+                        disabled={isProcessing}
                     >
                         <XIcon className="w-4 h-4" />
                     </Button>
                 </div>
             ) : (
                 <div
-                    className="w-full border-2 border-dashed border-muted-foreground/25 bg-muted/20 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 hover:border-muted-foreground/50 transition-all"
+                    className={cn(
+                        "w-full border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all",
+                        isProcessing 
+                            ? "border-primary/50 bg-primary/5 cursor-not-allowed" 
+                            : "border-muted-foreground/25 bg-muted/20 cursor-pointer hover:bg-muted/50 hover:border-muted-foreground/50"
+                    )}
                     style={{ aspectRatio: `${targetWidth} / ${targetHeight}` }}
-                    onClick={() => inputRef.current?.click()}
+                    onClick={() => !isProcessing && inputRef.current?.click()}
                 >
-                    <ImageIcon className="w-8 h-8 text-muted-foreground mb-2 opacity-70" />
-                    <div className="text-sm text-muted-foreground font-medium">Klik untuk upload gambar</div>
+                    {isProcessing ? (
+                        <>
+                            <Loader2 className="w-8 h-8 text-primary mb-2 animate-spin" />
+                            <div className="text-sm text-primary font-medium">Memproses gambar...</div>
+                        </>
+                    ) : (
+                        <>
+                            <ImageIcon className="w-8 h-8 text-muted-foreground mb-2 opacity-70" />
+                            <div className="text-sm text-muted-foreground font-medium">Klik untuk upload gambar</div>
+                        </>
+                    )}
                 </div>
             )}
 
-            <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleSelect} />
+            <input ref={inputRef} type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleSelect} disabled={isProcessing} />
 
             {/* Modal Crop shadcn/ui */}
             <Dialog open={!!cropData.src} onOpenChange={(open) => !open && closeCropModal()}>
@@ -213,7 +260,6 @@ export default function InputImage({
                                 src={cropData.src} 
                                 alt="Crop" 
                                 onLoad={onImageLoad} 
-                                // Catatan: object-contain dihapus agar crop box akurat, diganti w-auto
                                 className="max-h-[55vh] w-auto max-w-full block mx-auto rounded-sm" 
                             />
                         </ReactCrop>

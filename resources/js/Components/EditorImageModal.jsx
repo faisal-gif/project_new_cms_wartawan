@@ -12,6 +12,7 @@ import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import { Checkbox } from "@/Components/ui/checkbox";
 import { Progress } from "@/Components/ui/progress"; // Komponen baru shadcn
+import heic2any from "heic2any";
 
 export default function EditorImageModal() {
     const [show, setShow] = useState(false);
@@ -110,24 +111,55 @@ export default function EditorImageModal() {
 
     // Fungsi pemrosesan file gabungan (dari Drop atau Klik)
     const processSelectedFile = async (selectedFile) => {
-        if (!selectedFile || !selectedFile.type.startsWith("image/")) {
-            setError("Harap pilih file gambar yang valid.");
-            return;
-        }
+        if (!selectedFile) return;
 
         setLoading(true);
         setError("");
 
         try {
+            let fileToProcess = selectedFile;
+
+            // 1. CEK FORMAT HEIC/HEIF DAN LAKUKAN KONVERSI
+            const isHeic = selectedFile.type === "image/heic"
+                || selectedFile.type === "image/heif"
+                || selectedFile.name.toLowerCase().endsWith(".heic");
+
+            if (isHeic) {
+                // Proses konversi HEIC ke JPEG
+                const convertedBlob = await heic2any({
+                    blob: selectedFile,
+                    toType: "image/jpeg",
+                    quality: 0.9 // Pertahankan kualitas tinggi sebelum dikompres
+                });
+
+                // Jika HEIC berupa 'Live Photo', heic2any mereturn array. Kita ambil frame pertama.
+                const finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+
+                // Ganti ekstensi nama file dari .heic menjadi .jpg
+                const newFileName = selectedFile.name.replace(/\.heic|\.heif/gi, ".jpg");
+
+                // Ubah kembali Blob hasil konversi menjadi objek File standar
+                fileToProcess = new File([finalBlob], newFileName, { type: "image/jpeg" });
+            }
+
+            // 2. VALIDASI FORMAT (Setelah dikonversi)
+            if (!fileToProcess.type.startsWith("image/")) {
+                setError("Harap pilih file gambar yang valid.");
+                setLoading(false);
+                return;
+            }
+
+            // 3. PROSES KOMPRESI (Sekarang aman karena formatnya sudah JPEG/PNG)
             const options = { maxSizeMB: 1.5, maxWidthOrHeight: 1920, useWebWorker: true };
-            const compressedFile = await imageCompression(selectedFile, options);
+            const compressedFile = await imageCompression(fileToProcess, options);
 
             setFile(compressedFile);
-            setOriginalFileName(selectedFile.name);
+            setOriginalFileName(fileToProcess.name);
             setPreviewUrl(URL.createObjectURL(compressedFile));
+
         } catch (error) {
             console.error(error);
-            setError("Gagal memproses gambar saat dipilih.");
+            setError("Gagal memproses gambar. Pastikan file tidak rusak.");
         } finally {
             setLoading(false);
         }
