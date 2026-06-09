@@ -12,13 +12,15 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
 import React, { useState, useEffect } from 'react';
-// TAMBAHKAN MessageSquare DI SINI
-import { Plus, Search, Eye, MessageSquare } from 'lucide-react';
+// Tambahkan ikon Copy, Check, dan ExternalLink
+import { Plus, Search, Eye, MessageSquare, Copy, Check, ExternalLink } from 'lucide-react';
 import { Input } from '@/Components/ui/input';
 import { Badge } from '@/Components/ui/badge';
 
 export default function Index({ news, filters }) {
     const [searchTerm, setSearchTerm] = useState(filters?.search || '');
+    // State untuk melacak ID item yang sedang disalin URL-nya
+    const [copiedId, setCopiedId] = useState(null);
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -45,6 +47,22 @@ export default function Index({ news, filters }) {
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
+        });
+    };
+
+    // Fungsi untuk menyalin URL ke Clipboard
+    const copyToClipboard = (url, id) => {
+        if (!url) return;
+        
+        // Buat URL absolut (menggabungkan domain saat ini dengan path relatif)
+        const fullUrl = `${window.location.origin}${url}`;
+        
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            setCopiedId(id);
+            // Kembalikan ikon ke mode copy setelah 2 detik
+            setTimeout(() => setCopiedId(null), 2000);
+        }).catch(err => {
+            console.error('Failed to copy link: ', err);
         });
     };
 
@@ -134,7 +152,7 @@ export default function Index({ news, filters }) {
                                                     </div>
                                                 </div>
 
-                                                {/* Judul Utama Berita -> Tautan ke halaman Show */}
+                                                {/* Judul Utama Berita */}
                                                 <Link href={route('news.show', item.id)} className="block group">
                                                     <h3 className="font-semibold text-sm leading-snug group-hover:text-blue-600 group-hover:underline transition-colors line-clamp-2">
                                                         {item.title}
@@ -158,7 +176,7 @@ export default function Index({ news, filters }) {
                                                     <div className="space-y-1.5">
                                                         <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Daerah</span>
                                                         {item.news_daerah ? (
-                                                            <div className="p-2 border rounded-md bg-muted/10 space-y-1.5 h-full">
+                                                            <div className="p-2 border rounded-md bg-muted/10 space-y-1.5 h-full flex flex-col justify-between">
                                                                 <p className="text-[11px] font-medium line-clamp-2 leading-tight" title={item.news_daerah.title}>
                                                                     {item.news_daerah.title}
                                                                 </p>
@@ -174,19 +192,43 @@ export default function Index({ news, filters }) {
                                                         )}
                                                     </div>
 
-                                                    {/* Blok Nasional */}
+                                                    {/* Blok Nasional Mobile */}
                                                     <div className="space-y-1.5">
                                                         <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Nasional</span>
                                                         {item.news_nasional ? (
-                                                            <div className="p-2 border rounded-md bg-muted/10 space-y-1.5 h-full">
-                                                                <p className="text-[11px] font-medium line-clamp-2 leading-tight" title={item.news_nasional.news_title}>
-                                                                    {item.news_nasional.news_title || '-'}
-                                                                </p>
-                                                                <div className="flex flex-wrap items-center gap-1">
-                                                                    <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 shadow-none bg-background">
-                                                                        {item.news_nasional.kanal?.catnews_title || 'Nasional'}
-                                                                    </Badge>
-                                                                    {getStatusBadge(item.news_nasional.news_status)}
+                                                            <div className="p-2 border rounded-md bg-muted/10 space-y-1.5 h-full flex flex-col justify-between">
+                                                                <div className="flex items-start justify-between gap-1">
+                                                                    {/* Tambahkan link pada judul jika ada URL */}
+                                                                    {item.news_nasional.url ? (
+                                                                        <a href={item.news_nasional.url} target="_blank" rel="noopener noreferrer" className="text-[11px] font-medium line-clamp-2 leading-tight hover:text-blue-600 hover:underline flex items-start gap-1" title={item.news_nasional.news_title}>
+                                                                            {item.news_nasional.news_title || '-'}
+                                                                            <ExternalLink className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                                                                        </a>
+                                                                    ) : (
+                                                                        <p className="text-[11px] font-medium line-clamp-2 leading-tight" title={item.news_nasional.news_title}>
+                                                                            {item.news_nasional.news_title || '-'}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                                
+                                                                <div className="flex flex-wrap items-center justify-between gap-1">
+                                                                    <div className="flex items-center gap-1">
+                                                                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 shadow-none bg-background">
+                                                                            {item.news_nasional.kanal?.catnews_title || 'Nasional'}
+                                                                        </Badge>
+                                                                        {getStatusBadge(item.news_nasional.news_status)}
+                                                                    </div>
+                                                                    {/* Tombol Copy Mobile */}
+                                                                    {item.news_nasional.url && (
+                                                                        <Button 
+                                                                            variant="ghost" 
+                                                                            size="icon" 
+                                                                            className="h-5 w-5 bg-white border border-muted"
+                                                                            onClick={() => copyToClipboard(item.news_nasional.url, item.id)}
+                                                                        >
+                                                                            {copiedId === item.id ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
+                                                                        </Button>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         ) : (
@@ -211,7 +253,6 @@ export default function Index({ news, filters }) {
                                 <Table className="w-full table-fixed">
                                     <TableHeader className="bg-muted/30">
                                         <TableRow>
-                                            {/* Gunakan persentase (%) agar total mendekati/pas 100% */}
                                             <TableHead className="w-[5%]">ID</TableHead>
                                             <TableHead className="w-[35%]">Judul & Status</TableHead>
                                             <TableHead className="w-[25%]">Daerah</TableHead>
@@ -228,7 +269,6 @@ export default function Index({ news, filters }) {
                                                         #{item.id}
                                                     </TableCell>
 
-                                                    {/* Kolom Judul, Status & Indikator Note */}
                                                     <TableCell className="align-top pt-5">
                                                         <div className="space-y-2.5">
                                                             <Link href={route('news.show', item.id)} className="font-semibold text-foreground leading-snug block hover:text-blue-600 hover:underline transition-colors whitespace-normal break-words">
@@ -236,8 +276,6 @@ export default function Index({ news, filters }) {
                                                             </Link>
                                                             <div className="flex flex-wrap items-center gap-2">
                                                                 {getDistributionBadge(item.distribution_status)}
-
-                                                                {/* LOGIKA CATATAN (NOTE COUNT) */}
                                                                 {item.notes_count > 0 && (
                                                                     <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 shadow-none border-orange-200 text-[10px] flex items-center gap-1 font-medium">
                                                                         <MessageSquare className="w-3 h-3" />
@@ -248,10 +286,9 @@ export default function Index({ news, filters }) {
                                                         </div>
                                                     </TableCell>
 
-                                                    {/* Kolom Daerah Desktop */}
                                                     <TableCell className="align-top">
                                                         {item.news_daerah ? (
-                                                            <Card className="shadow-none border bg-background group-hover:border-muted-foreground/30 transition-colors">
+                                                            <Card className="shadow-none border bg-background group-hover:border-muted-foreground/30 transition-colors h-full">
                                                                 <CardContent className="p-3 space-y-2">
                                                                     <p className="text-xs font-medium leading-snug whitespace-normal break-words" title={item.news_daerah.title}>
                                                                         {item.news_daerah.title}
@@ -274,16 +311,43 @@ export default function Index({ news, filters }) {
                                                     {/* Kolom Nasional Desktop */}
                                                     <TableCell className="align-top">
                                                         {item.news_nasional ? (
-                                                            <Card className="shadow-none border bg-background group-hover:border-muted-foreground/30 transition-colors">
-                                                                <CardContent className="p-3 space-y-2">
-                                                                    <p className="text-xs font-medium leading-snug whitespace-normal break-words" title={item.news_nasional.news_title}>
-                                                                        {item.news_nasional.news_title || '-'}
-                                                                    </p>
-                                                                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t">
-                                                                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-medium shadow-none">
-                                                                            {item.news_nasional.kanal?.catnews_title || 'Nasional'}
-                                                                        </Badge>
-                                                                        {getStatusBadge(item.news_nasional.news_status)}
+                                                            <Card className="shadow-none border bg-background group-hover:border-muted-foreground/30 transition-colors h-full flex flex-col justify-between">
+                                                                <CardContent className="p-3 flex flex-col h-full space-y-2">
+                                                                    {item.news_nasional.url ? (
+                                                                        <a href={item.news_nasional.url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium leading-snug whitespace-normal break-words hover:text-blue-600 hover:underline flex items-start justify-between gap-1" title={item.news_nasional.news_title}>
+                                                                            <span>{item.news_nasional.news_title || '-'}</span>
+                                                                            <ExternalLink className="w-3 h-3 flex-shrink-0 mt-0.5 text-muted-foreground" />
+                                                                        </a>
+                                                                    ) : (
+                                                                        <p className="text-xs font-medium leading-snug whitespace-normal break-words" title={item.news_nasional.news_title}>
+                                                                            {item.news_nasional.news_title || '-'}
+                                                                        </p>
+                                                                    )}
+                                                                    
+                                                                    <div className="flex items-center justify-between pt-1 border-t mt-auto">
+                                                                        <div className="flex flex-wrap items-center gap-1.5">
+                                                                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-medium shadow-none">
+                                                                                {item.news_nasional.kanal?.catnews_title || 'Nasional'}
+                                                                            </Badge>
+                                                                            {getStatusBadge(item.news_nasional.news_status)}
+                                                                        </div>
+                                                                        {/* Tombol Copy URL */}
+                                                                        {item.news_nasional.url && (
+                                                                            <Button 
+                                                                                type="button"
+                                                                                variant="ghost" 
+                                                                                size="icon" 
+                                                                                className="h-6 w-6 ml-1 transition-all"
+                                                                                title="Salin Link Berita Nasional"
+                                                                                onClick={() => copyToClipboard(item.news_nasional.url, item.id)}
+                                                                            >
+                                                                                {copiedId === item.id ? (
+                                                                                    <Check className="h-3.5 w-3.5 text-green-600" />
+                                                                                ) : (
+                                                                                    <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                                                                                )}
+                                                                            </Button>
+                                                                        )}
                                                                     </div>
                                                                 </CardContent>
                                                             </Card>
@@ -298,7 +362,6 @@ export default function Index({ news, filters }) {
                                                         {formatDate(item.created_at)}
                                                     </TableCell>
 
-                                                    {/* Kolom Aksi */}
                                                     <TableCell className="text-center align-top pt-4">
                                                         <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50">
                                                             <Link href={route('news.show', item.id)} title="Lihat Detail">

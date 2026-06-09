@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
+
 class NewsController extends Controller
 {
 
@@ -30,22 +31,21 @@ class NewsController extends Controller
      */
     public function index(Request $request)
     {
-
         $user = Auth::user();
-        // 1. Ambil data berita (DB 1 & Relasi DB 2/3)
+
         try {
             $query = News::query()
                 ->select('id', 'is_code', 'title', 'writer_id', 'created_at', 'distribution_status')
                 ->withCount('notes')
                 ->with([
                     'newsDaerah:id,is_code,title,status,cat_id',
-                    'newsDaerah.kanal:id,name', // Sesuaikan kolom id & name dengan tabel KanalDaerah
+                    'newsDaerah.kanal:id,name',
                     'newsNasional:news_id,is_code,news_title,news_status,catnews_id',
-                    'newsNasional.kanal:catnews_id,catnews_title' // Sesuaikan kolom tabel KanalNasional
+                    'newsNasional.kanal:catnews_id,catnews_title'
                 ])
                 ->where('writer_id', $user->id);
 
-            // Search
+            // Search Filter
             if ($request->search) {
                 $query->where(function ($q) use ($request) {
                     $search = $request->search;
@@ -58,14 +58,29 @@ class NewsController extends Controller
             }
 
             $news = $query->latest()->simplePaginate(10)->withQueryString();
+
+            // Transformasi data untuk menambahkan URL pada newsNasional
+            $news->through(function ($item) {
+                if ($item->newsNasional) {
+                    // Ambil title kanal dengan fallback string kosong jika null
+                    $kanalName = $item->newsNasional->kanal->catnews_title ?? 'uncategorized';
+
+                    // Generate slugs
+                    $slugKanal = Str::slug($kanalName);
+                    $slugTitle = Str::slug($item->newsNasional->news_title);
+
+                    // Injeksi properti url ke dalam object newsNasional
+                    $item->newsNasional->url = "/{$slugKanal}/{$item->newsNasional->news_id}/{$slugTitle}";
+                }
+
+                return $item;
+            });
         } catch (QueryException $e) {
-            // Jika DB News atau relasinya mati, kembalikan data kosong yang valid untuk frontend
             Log::error('DB News/Relasi Error: ' . $e->getMessage());
 
-            // Paginator kosong agar Inertia/Vue tidak error saat loop/render
+            // Paginator kosong yang valid untuk frontend Inertia/React
             $news = new Paginator([], 10);
         }
-
 
         return Inertia::render('News/Index', [
             'news'    => $news,
