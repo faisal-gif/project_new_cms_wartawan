@@ -119,47 +119,54 @@ export default function EditorImageModal() {
         try {
             let fileToProcess = selectedFile;
 
-            // 1. CEK FORMAT HEIC/HEIF DAN LAKUKAN KONVERSI
+            // Cek format HEIC/HEIF
             const isHeic = selectedFile.type === "image/heic"
                 || selectedFile.type === "image/heif"
                 || selectedFile.name.toLowerCase().endsWith(".heic");
 
             if (isHeic) {
-                // Proses konversi HEIC ke JPEG
-                const convertedBlob = await heic2any({
-                    blob: selectedFile,
-                    toType: "image/jpeg",
-                    quality: 0.9 // Pertahankan kualitas tinggi sebelum dikompres
-                });
-
-                // Jika HEIC berupa 'Live Photo', heic2any mereturn array. Kita ambil frame pertama.
-                const finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-
-                // Ganti ekstensi nama file dari .heic menjadi .jpg
-                const newFileName = selectedFile.name.replace(/\.heic|\.heif/gi, ".jpg");
-
-                // Ubah kembali Blob hasil konversi menjadi objek File standar
-                fileToProcess = new File([finalBlob], newFileName, { type: "image/jpeg" });
+                try {
+                    const convertedBlob = await heic2any({
+                        blob: selectedFile,
+                        toType: "image/jpeg",
+                        quality: 0.9
+                    });
+                    const finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+                    const newFileName = selectedFile.name.replace(/\.heic|\.heif/gi, ".jpg");
+                    fileToProcess = new File([finalBlob], newFileName, { type: "image/jpeg" });
+                } catch (heicError) {
+                    console.error("HEIC Conversion failed:", heicError);
+                    throw new Error("Format HEIC/iPhone tidak didukung oleh browser ini atau file rusak.");
+                }
             }
 
-            // 2. VALIDASI FORMAT (Setelah dikonversi)
+            // Validasi format dasar
             if (!fileToProcess.type.startsWith("image/")) {
                 setError("Harap pilih file gambar yang valid.");
                 setLoading(false);
                 return;
             }
 
-            // 3. PROSES KOMPRESI (Sekarang aman karena formatnya sudah JPEG/PNG)
-            const options = { maxSizeMB: 1.5, maxWidthOrHeight: 1920, useWebWorker: true };
-            const compressedFile = await imageCompression(fileToProcess, options);
+            // PROSES KOMPRESI DENGAN STRATEGI CADANGAN (FALLBACK)
+            let compressedFile;
+            try {
+                // Coba kompresi menggunakan WebWorker (Lebih cepat)
+                const options = { maxSizeMB: 1.5, maxWidthOrHeight: 1920, useWebWorker: true };
+                compressedFile = await imageCompression(fileToProcess, options);
+            } catch (compressionError) {
+                console.warn("WebWorker gagal/crash, mencoba metode cadangan tanpa WebWorker...", compressionError);
+                // Jika browser perangkat crash mendadak, jalankan tanpa WebWorker (Failsafe)
+                const fallbackOptions = { maxSizeMB: 1.5, maxWidthOrHeight: 1920, useWebWorker: false };
+                compressedFile = await imageCompression(fileToProcess, fallbackOptions);
+            }
 
             setFile(compressedFile);
             setOriginalFileName(fileToProcess.name);
             setPreviewUrl(URL.createObjectURL(compressedFile));
 
-        } catch (error) {
-            console.error(error);
-            setError("Gagal memproses gambar. Pastikan file tidak rusak.");
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "Gagal memproses gambar. Silakan coba file lain.");
         } finally {
             setLoading(false);
         }
