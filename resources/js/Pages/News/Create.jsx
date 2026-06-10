@@ -27,9 +27,12 @@ export default function Create() {
         post(route('news.store'), {
             preserveScroll: true,
             onError: (err) => {
-                console.error("Terjadi kesalahan:", err);
-                // Memberikan feedback visual jika gagal
-                alert("Gagal menyimpan berita. Pastikan isian sudah benar dan ukuran gambar tidak terlalu besar.");
+                console.error("Error validasi:", err);
+
+                // Mengambil pesan error pertama dari server
+                const errorMessage = Object.values(err)[0] || "Server menolak request. Kemungkinan file gambar terlalu besar (Melebihi batas Nginx/PHP).";
+
+                alert("Gagal menyimpan: " + errorMessage);
             },
             onFinish: () => {
                 // Dieksekusi setelah sukses atau gagal
