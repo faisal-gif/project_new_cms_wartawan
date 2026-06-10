@@ -26,6 +26,14 @@ export default function Create() {
         e.preventDefault();
         post(route('news.store'), {
             preserveScroll: true,
+            onError: (err) => {
+                console.error("Terjadi kesalahan:", err);
+                // Memberikan feedback visual jika gagal
+                alert("Gagal menyimpan berita. Pastikan isian sudah benar dan ukuran gambar tidak terlalu besar.");
+            },
+            onFinish: () => {
+                // Dieksekusi setelah sukses atau gagal
+            }
         });
     };
 
@@ -43,16 +51,11 @@ export default function Create() {
                             <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Tulis Berita Baru</h2>
                             <p className="text-muted-foreground text-sm mt-1">Buat dan publikasikan artikel berita terbaru.</p>
                         </div>
-                        {/* Tombol Aksi - Hanya tampil di Desktop (sm:flex) */}
-                        <div className="hidden sm:flex items-center gap-3">
-                            <Button variant="outline" onClick={() => window.history.back()}>
-                                <X className="w-4 h-4 mr-2" /> Batal
-                            </Button>
-                            <Button onClick={submit} type="submit" form="news-form" disabled={processing}>
-                                <Save className="w-4 h-4 mr-2" />
-                                {processing ? 'Menyimpan...' : 'Simpan Berita'}
-                            </Button>
-                        </div>
+                        {/* Desktop: Hapus onClick={submit} */}
+                        <Button type="submit" form="news-form" disabled={processing}>
+                            <Save className="w-4 h-4 mr-2" />
+                            {processing ? 'Menyimpan...' : 'Simpan Berita'}
+                        </Button>
                     </div>
 
                     <form onSubmit={submit} id="news-form" className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -170,10 +173,10 @@ export default function Create() {
                         <X className="w-4 h-4 mr-2" /> Batal
                     </Link>
                 </Button>
+                {/* Mobile: Hapus onClick={submit} */}
                 <Button
                     className="flex-1"
                     type="submit"
-                    onClick={submit}
                     disabled={processing}
                     form="news-form"
                 >
