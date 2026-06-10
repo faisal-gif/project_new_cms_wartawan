@@ -20,7 +20,7 @@ class News extends Model
     public function tags()
     {
         return $this->belongsToMany(Tags::class, 'news_tags', 'news_id', 'tag_id')->withPivot('sort_order')
-            ->orderByPivot('sort_order', 'asc');;
+            ->orderByPivot('sort_order', 'asc');
     }
 
     public function newsDaerah()
