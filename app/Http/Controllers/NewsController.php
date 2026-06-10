@@ -109,7 +109,7 @@ class NewsController extends Controller
         if ($request->hasFile('image_thumbnail')) {
             try {
                 $applyWatermark = $request->boolean('image_watermark') ? '1' : '0';
-                $nameThumbnail = Str::slug($request->title, '-Thumbnail');
+                $nameThumbnail = Str::limit(Str::slug($request->title), 100, '');;
                 $thumbnailUrl = $this->cdnService->uploadImage(
                     $request->file('image_thumbnail'),
                     $nameThumbnail,
