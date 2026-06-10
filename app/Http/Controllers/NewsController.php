@@ -123,28 +123,11 @@ class NewsController extends Controller
             }
         }
 
-        $content = $request->content;
-        $tagIds = [];
-
         // 2. Mulai Transaksi Database (Hanya untuk operasi tulis DB yang cepat)
         DB::beginTransaction();
 
         try {
-            if ($request->has('tag') && is_array($request->tag)) {
-                foreach ($request->tag as $tagName) {
-                    $cleanTagName = strtolower(trim($tagName));
 
-                    $tag = Tags::firstOrCreate(['name' => $cleanTagName]);
-                    $tagIds[] = $tag->id;
-
-                    // Optimasi Regex
-                    $pattern = '/(?!(?:[^<]+>|[^>]+<\/a>))\b(' . preg_quote($tag->name, '/') . ')\b/iu';
-                    $tagUrl =  'https://timesindonesia.co.id/tag/' . Str::slug($tag->name);
-                    $replacement = '<a href="' . $tagUrl . '" class="text-blue-600 hover:underline font-semibold" title="Baca lebih lanjut tentang $1">$1</a>';
-
-                    $content = preg_replace($pattern, $replacement, $content, 2);
-                }
-            }
 
             // 3. Simpan tabel News
             $news = News::create([
@@ -153,7 +136,7 @@ class NewsController extends Controller
                 'title'               => $request->title,
                 'image_thumbnail'     => $thumbnailUrl,
                 'image_caption'       => $request->image_caption,
-                'content'             => $content,
+                'content'             => $request->content,
                 'distribution_status' => 0,
             ]);
 
