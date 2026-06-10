@@ -123,6 +123,9 @@ class NewsController extends Controller
             }
         }
 
+        $content = $request->content;
+        $tagIds = [];
+
         // 2. Mulai Transaksi Database (Hanya untuk operasi tulis DB yang cepat)
         DB::beginTransaction();
 
@@ -136,9 +139,18 @@ class NewsController extends Controller
                 'title'               => $request->title,
                 'image_thumbnail'     => $thumbnailUrl,
                 'image_caption'       => $request->image_caption,
-                'content'             => $request->content,
+                'content'             => $content,
                 'distribution_status' => 0,
             ]);
+
+            if ($request->has('tag') && is_array($request->tag)) {
+                foreach ($request->tag as $tagName) {
+                    $cleanTagName = strtolower(trim($tagName));
+
+                    $tag = Tags::firstOrCreate(['name' => $cleanTagName]);
+                    $tagIds[] = $tag->id;
+                }
+            }
 
             // 4. Sync Tags
             if (!empty($tagIds)) {
