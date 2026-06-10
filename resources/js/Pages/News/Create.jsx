@@ -48,14 +48,14 @@ export default function Create() {
                             <Button variant="outline" onClick={() => window.history.back()}>
                                 <X className="w-4 h-4 mr-2" /> Batal
                             </Button>
-                            <Button onClick={submit} disabled={processing}>
+                            <Button onClick={submit} form="news-form" disabled={processing}>
                                 <Save className="w-4 h-4 mr-2" />
                                 {processing ? 'Menyimpan...' : 'Simpan Berita'}
                             </Button>
                         </div>
                     </div>
 
-                    <form onSubmit={submit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                    <form onSubmit={submit} id="news-form" className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                         {/* KOLOM KIRI (UTAMA) */}
                         <div className="lg:col-span-2 space-y-6">
                             <Card className="border-muted shadow-sm">
@@ -174,6 +174,7 @@ export default function Create() {
                     className="flex-1"
                     onClick={submit}
                     disabled={processing}
+                    form="news-form"
                 >
                     <Save className="w-4 h-4 mr-2" />
                     {processing ? 'Menyimpan...' : 'Simpan'}
