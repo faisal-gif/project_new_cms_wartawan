@@ -102,62 +102,59 @@ class NewsController extends Controller
     public function store(NewsFormRequest $request)
     {
         $user = Auth::user();
+
+        // 1. Eksekusi Upload Jaringan di LUAR Database Transaction
+        // Kita tidak ingin menahan koneksi database selama CDN sedang memproses gambar
+        $thumbnailUrl = null;
+        if ($request->hasFile('image_thumbnail')) {
+            try {
+                $applyWatermark = $request->boolean('image_watermark') ? '1' : '0';
+                $nameThumbnail = Str::slug($request->title, '-Thumbnail');
+                $thumbnailUrl = $this->cdnService->uploadImage(
+                    $request->file('image_thumbnail'),
+                    $nameThumbnail,
+                    1,
+                    'convert',
+                    $applyWatermark
+                );
+            } catch (\Exception $e) {
+                Log::error('CDN Upload Error: ' . $e->getMessage());
+                return back()->withInput()->withErrors(['error' => 'Gagal mengunggah gambar ke server CDN.']);
+            }
+        }
+
+        $content = $request->content;
+        $tagIds = [];
+
+        // 2. Mulai Transaksi Database (Hanya untuk operasi tulis DB yang cepat)
         DB::beginTransaction();
 
         try {
-            $applyWatermark = $request->boolean('image_watermark') ? '1' : '0';
-            $thumbnailUrl = null;
-
-            // 1. Proses Upload image_thumbnail ke CDN
-            if ($request->hasFile('image_thumbnail')) {
-                $file = $request->file('image_thumbnail');
-                $nameThumbnail = Str::slug($request->title, '-Thumbnail');
-                $thumbnailUrl = $this->cdnService->uploadImage($file, $nameThumbnail, 1, 'convert', $applyWatermark) ?? null;
-            }
-
-            // Inisialisasi variabel untuk konten dan penampung ID tag
-            $content = $request->content;
-            $tagIds = [];
-
-
-            // 2. Proses Auto-Link Tag ke dalam Konten
             if ($request->has('tag') && is_array($request->tag)) {
                 foreach ($request->tag as $tagName) {
                     $cleanTagName = strtolower(trim($tagName));
 
-                    // Simpan atau ambil tag dari database
-                    $tag = Tags::firstOrCreate([
-                        'name' => $cleanTagName
-                    ]);
+                    $tag = Tags::firstOrCreate(['name' => $cleanTagName]);
                     $tagIds[] = $tag->id;
 
-                    // REGEX: Memastikan tidak merusak HTML yang sudah ada
+                    // Optimasi Regex
                     $pattern = '/(?!(?:[^<]+>|[^>]+<\/a>))\b(' . preg_quote($tag->name, '/') . ')\b/iu';
-
-                    // Route untuk tag (sesuaikan dengan nama route Anda)
-                    $tagSlug = Str::slug($tag->name);
-                    $tagUrl =  'https://timesindonesia.co.id/tag/' . $tagSlug;
-
-                    // Template HTML Anchor
+                    $tagUrl =  'https://timesindonesia.co.id/tag/' . Str::slug($tag->name);
                     $replacement = '<a href="' . $tagUrl . '" class="text-blue-600 hover:underline font-semibold" title="Baca lebih lanjut tentang $1">$1</a>';
 
-                    // PERUBAHAN DI SINI:
-                    // Ubah angka 1 menjadi 2 pada parameter ke-4 ($limit)
-                    // Jika kata tersebut muncul 5 kali, hanya 2 yang pertama yang akan menjadi link.
-                    // Jika hanya muncul 1 kali, fungsi tetap aman dan hanya mengubah 1 kata tersebut.
                     $content = preg_replace($pattern, $replacement, $content, 2);
                 }
             }
 
-            // 3. Simpan tabel News dengan konten yang sudah termodifikasi
+            // 3. Simpan tabel News
             $news = News::create([
-                'is_code'         => Str::random(8),
-                'writer_id'       => $user->id,
-                'title'           => $request->title,
-                'image_thumbnail' => $thumbnailUrl,
-                'image_caption'   => $request->image_caption,
-                'content'         => $content, // Menggunakan konten hasil Regex
-                'distribution_status'          => 0,
+                'is_code'             => Str::random(8),
+                'writer_id'           => $user->id,
+                'title'               => $request->title,
+                'image_thumbnail'     => $thumbnailUrl,
+                'image_caption'       => $request->image_caption,
+                'content'             => $content,
+                'distribution_status' => 0,
             ]);
 
             // 4. Sync Tags
@@ -167,25 +164,22 @@ class NewsController extends Controller
 
             DB::commit();
 
-            // 5. Notifikasi Editor
+            // 5. Notifikasi Editor (Wajib menggunakan Queue)
             $editors = User::role('editor')->get();
             if ($editors->isNotEmpty()) {
-                Notification::send(
-                    $editors,
-                    new NewsSubmittedNotification(
-                        $news->id,
-                        $news->title,
-                        $user->name
-                    )
-                );
+                // Notifikasi ini harus dilempar ke queue worker agar tidak memblokir response
+                Notification::send($editors, new NewsSubmittedNotification(
+                    $news->id,
+                    $news->title,
+                    $user->name
+                ));
             }
 
             return redirect()->route('news.index')->with('success', 'Berita berhasil disimpan!');
         } catch (\Exception $e) {
             DB::rollBack();
-            // Lebih baik menambahkan log untuk mempermudah tracing error di production
             Log::error('Error saving news: ' . $e->getMessage());
-            return back()->withInput()->withErrors(['error' => 'Gagal menyimpan berita: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => 'Gagal menyimpan berita: Terjadi kesalahan pada sistem.']);
         }
     }
 
