@@ -48,7 +48,7 @@ export default function Create() {
                             <Button variant="outline" onClick={() => window.history.back()}>
                                 <X className="w-4 h-4 mr-2" /> Batal
                             </Button>
-                            <Button onClick={submit} form="news-form" disabled={processing}>
+                            <Button onClick={submit} type="submit" form="news-form" disabled={processing}>
                                 <Save className="w-4 h-4 mr-2" />
                                 {processing ? 'Menyimpan...' : 'Simpan Berita'}
                             </Button>
@@ -172,6 +172,7 @@ export default function Create() {
                 </Button>
                 <Button
                     className="flex-1"
+                    type="submit"
                     onClick={submit}
                     disabled={processing}
                     form="news-form"
