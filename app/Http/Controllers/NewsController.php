@@ -113,7 +113,7 @@ class NewsController extends Controller
                 $thumbnailUrl = $this->cdnService->uploadImage(
                     $request->file('image_thumbnail'),
                     $nameThumbnail,
-                    1,
+                    3,
                     'convert',
                     $applyWatermark
                 );
