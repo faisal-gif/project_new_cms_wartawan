@@ -144,17 +144,18 @@ class NewsController extends Controller
             ]);
 
             if ($request->has('tag') && is_array($request->tag)) {
-                foreach ($request->tag as $tagName) {
+                $syncData = [];
+                foreach ($request->tag as $index => $tagName) {
                     $cleanTagName = strtolower(trim($tagName));
 
                     $tag = Tags::firstOrCreate(['name' => $cleanTagName]);
-                    $tagIds[] = $tag->id;
-                }
-            }
 
-            // 4. Sync Tags
-            if (!empty($tagIds)) {
-                $news->tags()->sync($tagIds);
+                    // Simpan id tag beserta urutan index-nya (0, 1, 2, dst)
+                    $syncData[$tag->id] = ['sort_order' => $index];
+                }
+
+                // Eksekusi sync menggunakan array berpasangan key-value ini
+                $news->tags()->sync($syncData);
             }
 
             DB::commit();
