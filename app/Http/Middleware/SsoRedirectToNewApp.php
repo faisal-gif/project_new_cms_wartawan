@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\SsoService;
 use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 class SsoRedirectToNewApp
@@ -38,7 +39,7 @@ class SsoRedirectToNewApp
                 // Redirect ke Web Baru (Breeze)
                 $newWebUrl = "https://cmsnew.tin.co.id/sso-login?token=" . urlencode($token);
 
-                return redirect()->away($newWebUrl);
+                return Inertia::location($newWebUrl);
             }
         }
 
