@@ -180,6 +180,32 @@ export default function InputTag({ label = "Tags", value = [], onChange }) {
         onChange(updated);
     };
 
+    // HANDLE PASTE (SPLIT BY COMMA)
+    const handleTagPaste = (e) => {
+        e.preventDefault(); // Mencegah text di-paste langsung ke dalam input
+
+        // Mengambil text dari clipboard
+        const pastedText = e.clipboardData.getData("text");
+
+        // Memecah string berdasarkan koma, membersihkan spasi, dan menghapus string kosong
+        const pastedTags = pastedText
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter((tag) => tag !== "");
+
+        if (pastedTags.length > 0) {
+            // Memfilter tag agar tidak ada duplikasi dengan state 'value' saat ini
+            const uniqueNewTags = pastedTags.filter(
+                (tag) => !value.includes(tag)
+            );
+
+            // Jika ada tag baru yang valid, gabungkan ke state
+            if (uniqueNewTags.length > 0) {
+                onChange([...value, ...uniqueNewTags]);
+            }
+        }
+    };
+
     return (
         <div className="space-y-2 w-full">
             <Label>{label}</Label>
@@ -214,6 +240,7 @@ export default function InputTag({ label = "Tags", value = [], onChange }) {
                     value={tagInput}
                     onChange={handleTagInputChange}
                     onKeyDown={handleTagKeyDown}
+                    onPaste={handleTagPaste}
                 />
             </div>
         </div>
