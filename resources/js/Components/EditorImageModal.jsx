@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import imageCompression from "browser-image-compression";
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import { Loader2, UploadCloud, Image as ImageIcon } from "lucide-react";
+import { Loader2, UploadCloud, Image as ImageIcon, AlertTriangle } from "lucide-react";
 import axios from "axios"; // Gunakan Axios bawaan Laravel/Inertia
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/Components/ui/dialog";
@@ -427,19 +427,29 @@ export default function EditorImageModal() {
                     {/* Penambahan z-[100] untuk memastikan selalu berada di atas modal Editor utama */}
                     <AlertDialogContent className="z-[100]">
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Centang opsi ini hanya jika foto adalah hasil dokumentasi Anda sendiri </AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Jangan pasang watermark pada foto milik pihak lain, foto dari humas, instansi, media lain, atau sumber eksternal untuk menghindari pelanggaran hak cipta dan masalah hukum.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel onClick={cancelWatermark}>
-                                Batal
-                            </AlertDialogCancel>
-                            <AlertDialogAction onClick={confirmWatermark}>
-                                Ya, Ini Foto Saya
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
+                        {/* Tambahkan warna merah (destructive) dan Ikon di Judul */}
+                        <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                            <AlertTriangle className="w-5 h-5" />
+                            Peringatan Hak Cipta!
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="font-medium mt-2">
+                            Centang opsi ini <span className="font-bold text-foreground">HANYA JIKA</span> foto adalah hasil dokumentasi Anda sendiri.
+                            <br /><br />
+                            Jangan pasang watermark pada foto milik pihak lain, foto dari humas, instansi, media lain, atau sumber eksternal untuk menghindari pelanggaran hak cipta dan masalah hukum.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={cancelWatermark}>
+                            Batal
+                        </AlertDialogCancel>
+                        {/* Ubah warna tombol menjadi merah (destructive) */}
+                        <AlertDialogAction 
+                            onClick={confirmWatermark}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Saya Mengerti, Ini Foto Saya
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
             </>

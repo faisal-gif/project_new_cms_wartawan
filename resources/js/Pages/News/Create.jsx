@@ -9,7 +9,7 @@ import { Button } from '@/Components/ui/button';
 import { Checkbox } from '@/Components/ui/checkbox';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Save, X } from 'lucide-react';
+import { AlertTriangle, Save, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/Components/ui/alert-dialog';
 
@@ -211,17 +211,27 @@ export default function Create() {
             <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Centang opsi ini hanya jika foto adalah hasil dokumentasi Anda sendiri</AlertDialogTitle>
-                        <AlertDialogDescription>
-                           Jangan pasang watermark pada foto milik pihak lain, foto dari humas, instansi, media lain, atau sumber eksternal untuk menghindari pelanggaran hak cipta dan masalah hukum.
+                        {/* Tambahkan warna merah (destructive) dan Ikon di Judul */}
+                        <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                            <AlertTriangle className="w-5 h-5" />
+                            Peringatan Hak Cipta!
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="font-medium mt-2">
+                            Centang opsi ini <span className="font-bold text-foreground">HANYA JIKA</span> foto adalah hasil dokumentasi Anda sendiri.
+                            <br /><br />
+                            Jangan pasang watermark pada foto milik pihak lain, foto dari humas, instansi, media lain, atau sumber eksternal untuk menghindari pelanggaran hak cipta dan masalah hukum.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={cancelWatermark}>
                             Batal
                         </AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmWatermark}>
-                            Ya, Ini Foto Saya
+                        {/* Ubah warna tombol menjadi merah (destructive) */}
+                        <AlertDialogAction
+                            onClick={confirmWatermark}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Saya Mengerti, Ini Foto Saya
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
