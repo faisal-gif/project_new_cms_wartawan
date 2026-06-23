@@ -367,12 +367,12 @@ export default function EditorImageModal() {
 
                         <div className="flex items-center space-x-2 pt-2">
                             <Checkbox
-                                id="watermark"
+                                id="editor-watermark" // <-- Ubah ID menjadi unik
                                 checked={watermark}
-                                onCheckedChange={handleWatermarkClick} // Gunakan handler baru
+                                onCheckedChange={handleWatermarkClick}
                                 disabled={loading}
                             />
-                            <Label htmlFor="watermark" className="cursor-pointer">
+                            <Label htmlFor="editor-watermark" className="cursor-pointer"> {/* <-- Sesuaikan htmlFor */}
                                 Apakah ini foto original anda?
                             </Label>
                         </div>
@@ -422,25 +422,27 @@ export default function EditorImageModal() {
             </DialogContent>
 
             {/* Tumpuk Alert Dialog di sini */}
-            <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
-                {/* Penambahan z-[100] untuk memastikan selalu berada di atas modal Editor utama */}
-                <AlertDialogContent className="z-[100]">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Centang opsi ini hanya jika foto adalah hasil dokumentasi Anda sendiri </AlertDialogTitle>
-                        <AlertDialogDescription>
-                           Jangan pasang watermark pada foto milik pihak lain, foto dari humas, instansi, media lain, atau sumber eksternal untuk menghindari pelanggaran hak cipta dan masalah hukum.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel onClick={cancelWatermark}>
-                            Batal
-                        </AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmWatermark}>
-                            Ya, Ini Foto Saya
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <>
+                <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
+                    {/* Penambahan z-[100] untuk memastikan selalu berada di atas modal Editor utama */}
+                    <AlertDialogContent className="z-[100]">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Centang opsi ini hanya jika foto adalah hasil dokumentasi Anda sendiri </AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Jangan pasang watermark pada foto milik pihak lain, foto dari humas, instansi, media lain, atau sumber eksternal untuk menghindari pelanggaran hak cipta dan masalah hukum.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel onClick={cancelWatermark}>
+                                Batal
+                            </AlertDialogCancel>
+                            <AlertDialogAction onClick={confirmWatermark}>
+                                Ya, Ini Foto Saya
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </>
         </Dialog>
     );
 }
