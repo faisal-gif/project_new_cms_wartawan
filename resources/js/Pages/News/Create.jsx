@@ -11,6 +11,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Save, X } from 'lucide-react';
 import React from 'react';
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/Components/ui/alert-dialog';
 
 export default function Create() {
     const { data, setData, post, processing, errors } = useForm({
@@ -21,6 +22,25 @@ export default function Create() {
         image_watermark: false,
         image_caption: '',
     });
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+
+    const handleWatermarkClick = (checked) => {
+        if (checked) {
+            setIsDialogOpen(true);
+        } else {
+            setData('image_watermark', false);
+        }
+    };
+
+    const confirmWatermark = () => {
+        setData('image_watermark', true);
+        setIsDialogOpen(false); // Tutup dialog
+    };
+
+    const cancelWatermark = () => {
+        setIsDialogOpen(false); // Tutup dialog, checkbox otomatis tetap false
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -133,10 +153,10 @@ export default function Create() {
                                         <Checkbox
                                             id="watermark"
                                             checked={data.image_watermark}
-                                            onCheckedChange={(checked) => setData('image_watermark', checked)}
+                                            onCheckedChange={handleWatermarkClick}
                                         />
                                         <Label htmlFor="watermark" className="text-sm cursor-pointer font-medium leading-tight">
-                                            Pasang Watermark pada Thumbnail
+                                            Apakah ini foto original anda ?
                                         </Label>
                                     </div>
                                 </CardContent>
@@ -187,6 +207,25 @@ export default function Create() {
                     {processing ? 'Menyimpan...' : 'Simpan'}
                 </Button>
             </div>
+
+            <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Konfirmasi Hak Cipta</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Dengan mencentang opsi ini, Anda mengonfirmasi bahwa foto ini adalah hasil karya Anda sendiri atau Anda memiliki hak penuh atas penggunaannya.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={cancelWatermark}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmWatermark}>
+                            Ya, Ini Foto Saya
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
         </AuthenticatedLayout>
     );
