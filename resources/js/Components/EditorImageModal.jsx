@@ -6,6 +6,16 @@ import { Loader2, UploadCloud, Image as ImageIcon } from "lucide-react";
 import axios from "axios"; // Gunakan Axios bawaan Laravel/Inertia
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/Components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/Components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/Components/ui/tabs";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
@@ -26,6 +36,7 @@ export default function EditorImageModal() {
     const [loading, setLoading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0); // State untuk progress bar
     const [watermark, setWatermark] = useState(false);
+    const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
     const [error, setError] = useState("");
     const [isDragging, setIsDragging] = useState(false); // State untuk Drag & Drop
 
@@ -56,8 +67,30 @@ export default function EditorImageModal() {
         setCompletedCrop(null);
         setUploadProgress(0);
 
+        // Reset watermark & alert saat ditutup
+        setWatermark(false);
+        setIsAlertDialogOpen(false);
+
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
+    };
+
+    // Buat handler untuk logika klik
+    const handleWatermarkClick = (checked) => {
+        if (checked) {
+            setIsAlertDialogOpen(true); // Tampilkan konfirmasi
+        } else {
+            setWatermark(false); // Langsung hapus centang
+        }
+    };
+
+    const confirmWatermark = () => {
+        setWatermark(true);
+        setIsAlertDialogOpen(false);
+    };
+
+    const cancelWatermark = () => {
+        setIsAlertDialogOpen(false);
     };
 
     const countImages = () => {
@@ -333,8 +366,15 @@ export default function EditorImageModal() {
                         {error && <p className="text-destructive text-sm font-medium">{error}</p>}
 
                         <div className="flex items-center space-x-2 pt-2">
-                            <Checkbox id="watermark" checked={watermark} onCheckedChange={setWatermark} disabled={loading} />
-                            <Label htmlFor="watermark" className="cursor-pointer">Berikan watermark pada foto</Label>
+                            <Checkbox
+                                id="watermark"
+                                checked={watermark}
+                                onCheckedChange={handleWatermarkClick} // Gunakan handler baru
+                                disabled={loading}
+                            />
+                            <Label htmlFor="watermark" className="cursor-pointer">
+                                Apakah ini foto original anda?
+                            </Label>
                         </div>
 
                         <div className="space-y-2">
@@ -380,6 +420,27 @@ export default function EditorImageModal() {
                     <Button variant="ghost" onClick={resetAndClose} disabled={loading}>Batal</Button>
                 </DialogFooter>
             </DialogContent>
+
+            {/* Tumpuk Alert Dialog di sini */}
+            <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
+                {/* Penambahan z-[100] untuk memastikan selalu berada di atas modal Editor utama */}
+                <AlertDialogContent className="z-[100]">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Centang opsi ini hanya jika foto adalah hasil dokumentasi Anda sendiri </AlertDialogTitle>
+                        <AlertDialogDescription>
+                           Jangan pasang watermark pada foto milik pihak lain, foto dari humas, instansi, media lain, atau sumber eksternal untuk menghindari pelanggaran hak cipta dan masalah hukum.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={cancelWatermark}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmWatermark}>
+                            Ya, Ini Foto Saya
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </Dialog>
     );
 }

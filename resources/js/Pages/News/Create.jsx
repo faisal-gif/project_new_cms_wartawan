@@ -211,9 +211,9 @@ export default function Create() {
             <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Konfirmasi Hak Cipta</AlertDialogTitle>
+                        <AlertDialogTitle>Centang opsi ini hanya jika foto adalah hasil dokumentasi Anda sendiri</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Dengan mencentang opsi ini, Anda mengonfirmasi bahwa foto ini adalah hasil karya Anda sendiri atau Anda memiliki hak penuh atas penggunaannya.
+                           Jangan pasang watermark pada foto milik pihak lain, foto dari humas, instansi, media lain, atau sumber eksternal untuk menghindari pelanggaran hak cipta dan masalah hukum.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
