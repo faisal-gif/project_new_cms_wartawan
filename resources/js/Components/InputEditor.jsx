@@ -93,16 +93,44 @@ export default function InputEditor({
                     images_upload_handler: null,
                     images_file_types: "",      // opsional: blok semua tipe
                     block_unsupported_drop: true, // 🔴 ini kunci utama
+                    
+                    // 💡 FILTERING SUPER KETAT: Semua jadi <p>, amankan list, hapus foto
                     paste_postprocess: (plugin, args) => {
+                        // 1. Hapus semua tag gambar bawaan dari copy-paste
+                        args.node.querySelectorAll("img").forEach(el => el.remove());
+
+                        // 2. Unwrap span (Keluarkan teksnya saja)
                         args.node.querySelectorAll("span").forEach(el => {
-                            el.replaceWith(...el.childNodes); // unwrap span
+                            el.replaceWith(...el.childNodes); 
                         });
+                        
                         args.node.querySelectorAll("o\\:p").forEach(el => el.remove());
+
+                        const blockTags = ["div", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "section", "article", "address"];
+                        
+                        blockTags.forEach(tag => {
+                            args.node.querySelectorAll(tag).forEach(el => {
+                                if (el.closest('li')) {
+                                    el.replaceWith(...el.childNodes);
+                                } else {
+                                    const p = document.createElement("p");
+                                    p.innerHTML = el.innerHTML;
+                                    el.replaceWith(p);
+                                }
+                            });
+                        });
+
+                        // 5. Bersihkan semua inline style & class sisa
                         args.node.querySelectorAll("*").forEach(el => {
                             el.removeAttribute("class");
                             el.style.fontFamily = "";
                             el.style.fontSize = "";
                             el.style.lineHeight = "";
+                            
+                            // Pastikan tidak ada link palsu/jebakan selain di tag <a>
+                            if (el.tagName !== 'A') {
+                                el.removeAttribute("href");
+                            }
                         });
                     },
 
