@@ -18,7 +18,7 @@ export default function Create() {
         content: '',
         tag: [],
         image_thumbnail: '',
-        image_watermark: true,
+        image_watermark: false,
         image_caption: '',
     });
 

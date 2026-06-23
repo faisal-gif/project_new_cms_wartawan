@@ -25,7 +25,7 @@ export default function EditorImageModal() {
     const [imageUrl, setImageUrl] = useState("");
     const [loading, setLoading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0); // State untuk progress bar
-    const [watermark, setWatermark] = useState(true);
+    const [watermark, setWatermark] = useState(false);
     const [error, setError] = useState("");
     const [isDragging, setIsDragging] = useState(false); // State untuk Drag & Drop
 
