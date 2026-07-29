@@ -94,6 +94,22 @@ export default function InputEditor({
                     images_file_types: "",      // opsional: blok semua tipe
                     block_unsupported_drop: true, // 🔴 ini kunci utama
 
+                    // 🟢 PRE-PROCESS: perbaiki HTML mentah SEBELUM di-parse browser.
+                    // Samsung Notes menghasilkan tag rusak <span;> / </span;> (ada titik-koma),
+                    // yang menyebabkan karakter ">" liar bocor jadi teks biasa.
+                    // Harus dibersihkan di sini karena paste_postprocess bekerja di level
+                    // DOM yang sudah terparsing (sudah terlambat menangkap tag cacat).
+                    paste_preprocess: (plugin, args) => {
+                        args.content = args.content
+                            // Perbaiki tag span rusak menjadi span valid
+                            .replace(/<\s*span\s*;\s*>/gi, '<span>')
+                            .replace(/<\s*\/\s*span\s*;\s*>/gi, '</span>')
+                            // Buang komentar clipdata Samsung Notes
+                            .replace(/<!--[\s\S]*?-->/g, '')
+                            // Jaring pengaman: buang varian tag rusak lain (mis. <p;>, <b;>, <i;>)
+                            .replace(/<(\/?)\s*([a-z0-9]+)\s*;\s*>/gi, '<$1$2>');
+                    },
+
                     // 💡 FILTERING SUPER KETAT: Semua jadi <p>, amankan list, hapus foto
                     paste_postprocess: (plugin, args) => {
                         args.node.querySelectorAll("img").forEach(el => el.remove());
@@ -115,15 +131,7 @@ export default function InputEditor({
                             });
                         });
 
-                        // 🔴 TAMBAHAN: bersihkan karakter literal ">" sisa quote email/markdown
-                        const walker = document.createTreeWalker(args.node, NodeFilter.SHOW_TEXT);
-                        let textNode;
-                        while ((textNode = walker.nextNode())) {
-                            // hapus satu atau lebih ">" di awal teks node, opsional diikuti spasi
-                            textNode.nodeValue = textNode.nodeValue.replace(/^\s*>+\s?/, '');
-                        }
-
-                        // (lanjutan kode existing Anda: bersihkan class & style)
+                        // Bersihkan semua inline style & class sisa
                         args.node.querySelectorAll("*").forEach(el => {
                             el.removeAttribute("class");
                             el.style.fontFamily = "";
