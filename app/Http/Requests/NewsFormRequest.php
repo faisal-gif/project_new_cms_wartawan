@@ -49,6 +49,7 @@ class NewsFormRequest extends FormRequest
             'tag.*.max'                  => 'Panjang setiap tag tidak boleh lebih dari 255 karakter.',
             'content.required'   => 'Konten berita Wajib diisi',
             'image_caption.required' => 'Caption gambar harus diisi.',
+            'image_caption.max' => 'Caption gambar tidak boleh lebih dari 255 karakter.',
         ];
     }
 }
