@@ -55,6 +55,7 @@ export default function Create() {
 
                 toast.error(errorMessage, {
                     description: "Silakan periksa kembali inputan Anda.",
+                    position: "top-center"
                 });
             },
             onFinish: () => {

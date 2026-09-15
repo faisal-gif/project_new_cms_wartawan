@@ -10,7 +10,19 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user ;
+
+    const { auth, flash } = usePage().props;
+    const user = auth.user;
+
+    useEffect(() => {
+        if (flash?.success) {
+            toast.success("Berhasil", { description: flash.success, position: "top-center"  });
+        }
+        if (flash?.error) {
+            toast.error("Terjadi Kesalahan", { description: flash.error, position: "top-center" });
+        }
+    }, [flash]);
+
     return (
         <SidebarProvider>
             <div className="min-h-screen flex w-full bg-muted/30">
