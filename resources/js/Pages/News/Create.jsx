@@ -53,6 +53,10 @@ export default function Create() {
                 // Mengambil pesan error pertama dari server
                 const errorMessage = Object.values(err)[0] || "Server menolak request. Kemungkinan file gambar terlalu besar (Melebihi batas Nginx/PHP).";
 
+                toast.error(errorMessage, {
+                    description: "Silakan periksa kembali inputan Anda.",
+                    position: "top-center"
+                });
             },
             onFinish: () => {
                 // Dieksekusi setelah sukses atau gagal
