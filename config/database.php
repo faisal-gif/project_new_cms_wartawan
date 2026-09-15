@@ -73,6 +73,7 @@ return [
             'password' => env('DB_PASSWORD_NASIONAL'),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'options' => [PDO::ATTR_TIMEOUT => 5], // DB remote kadang lambat connect, gagal cepat
         ],
 
         'mysql_daerah' => [
@@ -84,6 +85,7 @@ return [
             'password' => env('DB_PASSWORD_DAERAH'),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'options' => [PDO::ATTR_TIMEOUT => 5],
         ],
 
         'mariadb' => [

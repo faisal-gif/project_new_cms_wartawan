@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Deferred, Head, Link } from '@inertiajs/react';
+import { Skeleton } from '@/Components/ui/skeleton';
 import {
     Card,
     CardContent,
@@ -100,6 +101,7 @@ export default function Dashboard({ auth, recentNews, stats: dbStats }) {
 
                     {/* Top Overview Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+                        <Deferred data="stats" fallback={[0, 1, 2].map((i) => <Skeleton key={i} className="h-[120px] bg-white shadow-sm" />)}>
                         {stats.map((stat, index) => {
                             const Icon = stat.icon;
                             return (
@@ -125,6 +127,7 @@ export default function Dashboard({ auth, recentNews, stats: dbStats }) {
                                 </Card>
                             );
                         })}
+                        </Deferred>
                     </div>
 
                     {/* Main Content Grid */}
@@ -148,7 +151,8 @@ export default function Dashboard({ auth, recentNews, stats: dbStats }) {
                             </CardHeader>
                             <CardContent className="p-0">
                                 <div className="divide-y">
-                                    {recentNews.map((item) => (
+                                    <Deferred data="recentNews" fallback={[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 m-4 sm:mx-6" />)}>
+                                    {() => recentNews.map((item) => (
                                         <div key={item.id} className="p-4 sm:px-6 hover:bg-muted/30 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 
                                             {/* Judul & Waktu */}
@@ -193,6 +197,7 @@ export default function Dashboard({ auth, recentNews, stats: dbStats }) {
 
                                         </div>
                                     ))}
+                                    </Deferred>
                                 </div>
                             </CardContent>
                         </Card>

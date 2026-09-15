@@ -186,6 +186,11 @@ class NewsController extends Controller
     {
         $user = Auth::user();
 
+        // Keamanan: writer hanya boleh melihat berita miliknya
+        if ((int) $news->writer_id !== (int) $user->id) {
+            return redirect()->route('news.index')->with('error', 'Data berita tidak ditemukan atau Anda tidak memiliki hak akses.');
+        }
+
         try {
             // Menggunakan Eager Loading (with) untuk mencegah N+1 Query Problem
             $news->load([
@@ -196,22 +201,15 @@ class NewsController extends Controller
                 'newsNasional.kanal:catnews_id,catnews_title',
                 'notes.user:id,full_name',
                 'notes.user.roles:id,name'
-            ])
-                ->where('writer_id', $user->id) // Keamanan: Pastikan writer hanya bisa melihat miliknya
-                ->firstOrFail(); // Jika tidak ditemukan, akan otomatis masuk ke catch block
-
-
+            ]);
 
             return Inertia::render('News/Show', [
                 'news' => $news
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Menangani error jika ID tidak ditemukan atau bukan milik user
-            return redirect()->route('news.index')->withErrors(['error' => 'Data berita tidak ditemukan atau Anda tidak memiliki hak akses.']);
         } catch (\Exception $e) {
             // Menangani error DB/Relasi lainnya
             Log::error('DB Show News Error: ' . $e->getMessage());
-            return redirect()->route('news.index')->withErrors(['error' => 'Terjadi kesalahan saat memuat detail berita.']);
+            return redirect()->route('news.index')->with('error', 'Terjadi kesalahan saat memuat detail berita.');
         }
     }
 
