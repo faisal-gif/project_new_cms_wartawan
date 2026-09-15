@@ -12,6 +12,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { AlertTriangle, Save, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/Components/ui/alert-dialog';
+import { toast } from 'sonner';
 
 export default function Create() {
     const { data, setData, post, processing, errors } = useForm({
@@ -52,7 +53,9 @@ export default function Create() {
                 // Mengambil pesan error pertama dari server
                 const errorMessage = Object.values(err)[0] || "Server menolak request. Kemungkinan file gambar terlalu besar (Melebihi batas Nginx/PHP).";
 
-                alert("Gagal menyimpan: " + errorMessage);
+                toast.error(errorMessage, {
+                    description: "Silakan periksa kembali inputan Anda.",
+                });
             },
             onFinish: () => {
                 // Dieksekusi setelah sukses atau gagal
