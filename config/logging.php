@@ -82,6 +82,27 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Notifikasi error ke grup Telegram. Aktifkan lewat LOG_STACK=daily,telegram
+        'telegram' => [
+            'driver' => 'monolog',
+            // Level sendiri, JANGAN pakai LOG_LEVEL (biasanya debug -> spam)
+            'level' => env('LOG_TELEGRAM_LEVEL', 'error'),
+            'handler' => Monolog\Handler\TelegramBotHandler::class,
+            'handler_with' => [
+                'apiKey' => env('LOG_TELEGRAM_BOT_TOKEN', ''),
+                'channel' => env('LOG_TELEGRAM_CHAT_ID', ''),
+                'splitLongMessages' => true,
+            ],
+            // Ringkas tanpa stack trace; trace lengkap tetap di file log harian
+            'formatter' => Monolog\Formatter\LineFormatter::class,
+            'formatter_with' => [
+                'format' => "[%datetime%] " . env('APP_ENV', 'production') . ".%level_name%: %message%\n",
+                'dateFormat' => 'Y-m-d H:i:s',
+            ],
+            'tap' => [App\Logging\DeduplicateLogs::class],
+            'replace_placeholders' => true,
+        ],
+
         'papertrail' => [
             'driver' => 'monolog',
             'level' => env('LOG_LEVEL', 'debug'),
