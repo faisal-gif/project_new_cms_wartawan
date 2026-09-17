@@ -3,7 +3,6 @@ import { ImageIcon, XIcon, Loader2 } from "lucide-react";
 import ReactCrop, { centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import imageCompression from "browser-image-compression";
-import heic2any from "heic2any"; // Tambahkan import heic2any
 
 // Komponen shadcn/ui
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/Components/ui/dialog";
@@ -86,7 +85,7 @@ export default function InputImage({
                         || file.name.toLowerCase().endsWith(".heic");
 
             if (isHeic) {
-                const convertedBlob = await heic2any({
+                const convertedBlob = await (await import("heic2any")).default({
                     blob: file,
                     toType: "image/jpeg",
                     quality: 0.9

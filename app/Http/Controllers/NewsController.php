@@ -90,7 +90,7 @@ class NewsController extends Controller
                             // Tambahkan URL berita nasional
                             $slugKanal = Str::slug($item->kanal->catnews_title ?? 'uncategorized');
                             $slugTitle = Str::slug($item->news_title);
-                            $item->url = "https://timesindonesia.co.id/{$slugKanal}/{$item->news_id}/{$slugTitle}";
+                            $item->url = config('services.portal_nasional.url') . "/{$slugKanal}/{$item->news_id}/{$slugTitle}";
                         });
 
                     return $codes->mapWithKeys(fn($code) => [$code => [
@@ -234,29 +234,5 @@ class NewsController extends Controller
             report($e);
             return redirect()->route('news.index')->with('error', 'Terjadi kesalahan saat memuat detail berita.');
         }
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(News $news)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, News $news)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(News $news)
-    {
-        //
     }
 }

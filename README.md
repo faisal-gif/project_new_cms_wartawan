@@ -1,59 +1,92 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# CMS Wartawan
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+CMS untuk wartawan menulis berita "master" yang kemudian didistribusikan ke portal **Nasional** dan **Daerah**. Wartawan bisa memantau status tayang beritanya di kedua portal.
 
-## About Laravel
+**Stack:** Laravel 12 · Inertia.js 2 · React 18 · Tailwind 4 / shadcn · MySQL · Laravel Reverb
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Arsitektur singkat
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Bagian | Keterangan |
+|---|---|
+| DB lokal (`mysql`) | Tabel `writers` (akun login), `news`, `tags`, `news_tags`, `news_notes`, `users` (editor, dengan role spatie), session, cache, jobs |
+| DB daerah (`mysql_daerah`) | DB portal daerah, **hanya dibaca**: status & jumlah berita tayang |
+| DB nasional (`mysql_nasional`) | DB portal nasional, **hanya dibaca**: status & jumlah berita tayang |
+| CDN (`TIN_CDN_URL`) | Upload & konversi gambar (thumbnail dan gambar di editor) |
+| Reverb + queue | Notifikasi realtime ke editor saat berita baru masuk |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Login memakai model `App\Models\Writer`. Model `User` adalah akun **editor** (penerima notifikasi).
+- Akun wartawan dibuat oleh admin. **Tidak ada** registrasi publik maupun halaman profil.
+- Data dari DB daerah/nasional dimuat **deferred** (setelah halaman tampil) dan koneksinya memakai timeout 5 detik. Jika gagal, UI menampilkan "Data tidak tersedia", bukan angka 0.
 
-## Learning Laravel
+## Kebutuhan
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- PHP 8.2+ (ekstensi `pdo_mysql`, `curl`, `mbstring`)
+- Composer 2
+- Node.js 22+
+- MySQL/MariaDB
+- Akses jaringan ke DB daerah, DB nasional, dan CDN
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Setup lokal
 
-## Laravel Sponsors
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Isi `.env`:
 
-### Premium Partners
+| Key | Keterangan |
+|---|---|
+| `DB_CONNECTION=mysql`, `DB_*` | DB lokal CMS |
+| `DB_*_DAERAH` | Koneksi DB portal daerah (read-only) |
+| `DB_*_NASIONAL` | Koneksi DB portal nasional (read-only) |
+| `TIN_CDN_URL`, `TIN_CDN_API_KEY` | API CDN gambar |
+| `PORTAL_NASIONAL_URL` | Domain portal untuk link berita nasional (default `https://timesindonesia.co.id`) |
+| `SESSION_DRIVER=database`, `CACHE_STORE=database`, `QUEUE_CONNECTION=database` | Default yang dipakai |
+| `BROADCAST_CONNECTION=reverb`, `REVERB_*` | Notifikasi realtime |
+| `LOG_STACK`, `LOG_TELEGRAM_*` | Lihat bagian Logging |
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+> ⚠️ **Skema DB belum ada di repo.** Hanya ada migration `writer_sessions`. Tabel lain (`news`, `tags`, `news_tags`, `writers`, dst.) harus disalin dari DB yang sudah berjalan. Pastikan `news_tags` punya kolom `sort_order`.
 
-## Contributing
+Jalankan semua proses dev (server, queue, log, vite) sekaligus:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer dev
+```
 
-## Code of Conduct
+## Production
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+php artisan config:cache
+php artisan route:cache
+```
 
-## Security Vulnerabilities
+Yang wajib berjalan di server:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- **PHP-FPM** (atau LiteSpeed). Notifikasi editor dikirim via `defer()` *setelah* response terkirim. Ini hanya bekerja dengan `fastcgi_finish_request`, **tidak** dengan `php artisan serve`.
+- **Queue worker**: `php artisan queue:work`. Broadcast notifikasi editor masuk queue.
+- **Reverb**: `php artisan reverb:start`.
 
-## License
+## Logging & notifikasi error
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- `LOG_STACK=daily,telegram`: log file per hari (disimpan `LOG_DAILY_DAYS`, default 14) plus notifikasi ke grup Telegram.
+- Telegram hanya menerima level `LOG_TELEGRAM_LEVEL` (default `error`). Error yang sama dikirim **maksimal 1× per jam**. Jika Telegram gagal, request tidak ikut gagal.
+- Setup bot: buat bot di **@BotFather** → masukkan ke grup → ambil `chat.id` dari `https://api.telegram.org/bot<TOKEN>/getUpdates` → isi `LOG_TELEGRAM_BOT_TOKEN` dan `LOG_TELEGRAM_CHAT_ID`.
+
+## Test & CI
+
+```bash
+php artisan test
+```
+
+GitHub Actions (`.github/workflows/ci.yml`) menjalankan build frontend dan test di setiap push/PR ke `main`.
+
+> Saat ini sebagian besar test bawaan Breeze masih gagal (memakai tabel `users` & skema belum di repo), sehingga langkah test di CI **belum memblokir**. Lihat backlog tech debt #5/#6.
+
+## Catatan migrasi
+
+SSO ke/dari web lama sudah dihapus. Key `SSO_SECRET_KEY` dan kolom `writers.redirect_new_back` di server tidak dipakai lagi dan boleh dihapus.

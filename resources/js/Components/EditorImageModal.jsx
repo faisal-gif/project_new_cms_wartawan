@@ -22,7 +22,6 @@ import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import { Checkbox } from "@/Components/ui/checkbox";
 import { Progress } from "@/Components/ui/progress"; // Komponen baru shadcn
-import heic2any from "heic2any";
 
 export default function EditorImageModal() {
     const [show, setShow] = useState(false);
@@ -159,7 +158,7 @@ export default function EditorImageModal() {
 
             if (isHeic) {
                 try {
-                    const convertedBlob = await heic2any({
+                    const convertedBlob = await (await import("heic2any")).default({
                         blob: selectedFile,
                         toType: "image/jpeg",
                         quality: 0.9

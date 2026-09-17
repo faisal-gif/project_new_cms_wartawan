@@ -3,11 +3,8 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\NewsDaerahController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TextEditorController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -17,18 +14,12 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 
 Route::middleware('auth')->group(function () {
     Route::post('/upload-image', [TextEditorController::class, 'upload']);
-    Route::resource('/news', NewsController::class);
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Edit/update/hapus belum ada: tambahkan ke only() saat fiturnya dibuat (dengan cek pemilik)
+    Route::resource('/news', NewsController::class)->only(['index', 'create', 'store', 'show']);
 });
 
 Route::middleware('auth')->prefix('daerah')->name('daerah.')->group(function () {
     Route::get('/news', [NewsDaerahController::class, 'index'])->name('news.index');
-});
-
-Route::middleware('auth')->prefix('nasional')->name('nasional.')->group(function () {
-    // Route::get('/news', [NewsNasionalController::class, 'index'])->name('news.index'); --- IGNORE ---
 });
 
 require __DIR__ . '/auth.php';

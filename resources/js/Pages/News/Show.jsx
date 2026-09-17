@@ -2,7 +2,6 @@ import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/Components/ui/card';
-import { Button } from '@/Components/ui/button';
 import { ArrowLeft, CheckCircle2, Clock, Globe, MapPin, MessageSquare, Tag } from 'lucide-react';
 import { Badge } from '@/Components/ui/badge';
 
@@ -42,11 +41,6 @@ export default function Show({ news }) {
                                     Kode: {news.is_code}
                                 </span>
                             </div>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                            <Button asChild variant="outline">
-                                <Link href={route('news.edit', news.id)}>Edit Berita</Link>
-                            </Button>
                         </div>
                     </div>
 

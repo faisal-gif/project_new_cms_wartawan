@@ -23,6 +23,11 @@ return [
         'api_key' => env('TIN_CDN_API_KEY'),
     ],
 
+    // Portal publik tempat berita nasional tayang (dipakai untuk link berita)
+    'portal_nasional' => [
+        'url' => rtrim(env('PORTAL_NASIONAL_URL', 'https://timesindonesia.co.id'), '/'),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],

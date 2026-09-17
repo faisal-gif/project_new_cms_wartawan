@@ -48,9 +48,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                {/* <DropdownMenuItem asChild>
-                                    <Link href="/profile">Profile</Link>
-                                </DropdownMenuItem> */}
                                 <DropdownMenuItem asChild className={"w-full"}>
                                     <Link href="/logout" method="post" as="button">
                                         Log Out
