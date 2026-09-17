@@ -58,18 +58,25 @@ composer dev
 
 ## Production
 
+Deploy:
+
 ```bash
-composer install --no-dev --optimize-autoloader
+composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
 npm ci && npm run build
 php artisan config:cache
 php artisan route:cache
+pm2 restart ecosystem.config.cjs
 ```
 
 Yang wajib berjalan di server:
 
-- **PHP-FPM** (atau LiteSpeed). Notifikasi editor dikirim via `defer()` *setelah* response terkirim. Ini hanya bekerja dengan `fastcgi_finish_request`, **tidak** dengan `php artisan serve`.
-- **Queue worker**: `php artisan queue:work`. Broadcast notifikasi editor masuk queue.
-- **Reverb**: `php artisan reverb:start`.
+- **nginx + PHP-FPM** untuk web (atau LiteSpeed). Notifikasi editor dikirim via `defer()` *setelah* response terkirim. Ini hanya bekerja dengan `fastcgi_finish_request`, **tidak** dengan `php artisan serve`.
+- **Queue worker lewat pm2** ([ecosystem.config.cjs](ecosystem.config.cjs)). Broadcast notifikasi editor masuk queue `database`. Tanpa worker, notifikasi realtime tidak terkirim. Setup pertama kali:
+  ```bash
+  pm2 start ecosystem.config.cjs
+  pm2 save && pm2 startup
+  ```
+- **Reverb server tidak dijalankan di aplikasi ini.** `REVERB_*` di `.env` menunjuk ke Reverb milik aplikasi editor.
 
 ## Logging & notifikasi error
 
