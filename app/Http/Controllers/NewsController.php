@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\NewsFormRequest;
 use App\Models\News;
+use App\Models\NewsDaerah;
+use App\Models\NewsNasional;
 use App\Models\Tags;
 use App\Models\User;
 use App\Notifications\NewsSubmittedNotification;
@@ -13,10 +15,11 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+
+use function Illuminate\Support\defer;
 
 
 class NewsController extends Controller
@@ -34,15 +37,10 @@ class NewsController extends Controller
         $user = Auth::user();
 
         try {
+            // Hanya data DB lokal (cepat). Data daerah/nasional di-defer di prop 'distribution'.
             $query = News::query()
                 ->select('id', 'is_code', 'title', 'writer_id', 'created_at', 'distribution_status')
                 ->withCount('notes')
-                ->with([
-                    'newsDaerah:id,is_code,title,status,cat_id',
-                    'newsDaerah.kanal:id,name',
-                    'newsNasional:news_id,is_code,news_title,news_status,catnews_id',
-                    'newsNasional.kanal:catnews_id,catnews_title'
-                ])
                 ->where('writer_id', $user->id);
 
             // Search Filter
@@ -58,33 +56,52 @@ class NewsController extends Controller
             }
 
             $news = $query->latest()->simplePaginate(10)->withQueryString();
-
-            // Transformasi data untuk menambahkan URL pada newsNasional
-            $news->through(function ($item) {
-                if ($item->newsNasional) {
-                    // Ambil title kanal dengan fallback string kosong jika null
-                    $kanalName = $item->newsNasional->kanal->catnews_title ?? 'uncategorized';
-
-                    // Generate slugs
-                    $slugKanal = Str::slug($kanalName);
-                    $slugTitle = Str::slug($item->newsNasional->news_title);
-
-                    // Injeksi properti url ke dalam object newsNasional
-                    $item->newsNasional->url = "https://timesindonesia.co.id/{$slugKanal}/{$item->newsNasional->news_id}/{$slugTitle}";
-                }
-
-                return $item;
-            });
         } catch (QueryException $e) {
-            Log::error('DB News/Relasi Error: ' . $e->getMessage());
+            report($e);
 
-            // Paginator kosong yang valid untuk frontend Inertia/React
+            // Paginator kosong yang valid untuk frontend Inertia/React, plus toast agar tidak terlihat "belum ada berita"
             $news = new Paginator([], 10);
+            $request->session()->now('error', 'Gagal memuat daftar berita. Silakan coba lagi.');
         }
 
         return Inertia::render('News/Index', [
             'news'    => $news,
             'filters' => $request->only(['search']),
+
+            // Status distribusi dari DB remote, dimuat setelah halaman tampil.
+            // Format: [is_code => ['news_daerah' => ..., 'news_nasional' => ...]]
+            'distribution' => Inertia::defer(function () use ($news) {
+                $codes = collect($news->items())->pluck('is_code')->filter()->values();
+                if ($codes->isEmpty()) {
+                    return [];
+                }
+
+                try {
+                    $daerah = NewsDaerah::whereIn('is_code', $codes)
+                        ->with('kanal:id,name')
+                        ->get(['id', 'is_code', 'title', 'status', 'cat_id'])
+                        ->keyBy('is_code');
+
+                    $nasional = NewsNasional::whereIn('is_code', $codes)
+                        ->with('kanal:catnews_id,catnews_title')
+                        ->get(['news_id', 'is_code', 'news_title', 'news_status', 'catnews_id'])
+                        ->keyBy('is_code')
+                        ->each(function ($item) {
+                            // Tambahkan URL berita nasional
+                            $slugKanal = Str::slug($item->kanal->catnews_title ?? 'uncategorized');
+                            $slugTitle = Str::slug($item->news_title);
+                            $item->url = "https://timesindonesia.co.id/{$slugKanal}/{$item->news_id}/{$slugTitle}";
+                        });
+
+                    return $codes->mapWithKeys(fn($code) => [$code => [
+                        'news_daerah'   => $daerah->get($code),
+                        'news_nasional' => $nasional->get($code),
+                    ]]);
+                } catch (\Exception $e) {
+                    report($e);
+                    return null; // null = gagal dimuat, frontend tampilkan "Data tidak tersedia"
+                }
+            }),
         ]);
     }
 
@@ -118,7 +135,7 @@ class NewsController extends Controller
                     $applyWatermark
                 );
             } catch (\Exception $e) {
-                Log::error('CDN Upload Error: ' . $e->getMessage());
+                report($e);
                 return back()->withInput()->withErrors(['error' => 'Gagal mengunggah gambar ke server CDN.']);
             }
         }
@@ -159,24 +176,30 @@ class NewsController extends Controller
             }
 
             DB::commit();
-
-            // 5. Notifikasi Editor (Wajib menggunakan Queue)
-            $editors = User::role('editor')->get();
-            if ($editors->isNotEmpty()) {
-                // Notifikasi ini harus dilempar ke queue worker agar tidak memblokir response
-                Notification::send($editors, new NewsSubmittedNotification(
-                    $news->id,
-                    $news->title,
-                    $user->name
-                ));
-            }
-
-            return redirect()->route('news.index')->with('success', 'Berita berhasil disimpan!');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error saving news: ' . $e->getMessage());
+            report($e);
             return back()->withInput()->withErrors(['error' => 'Gagal menyimpan berita: Terjadi kesalahan pada sistem.']);
         }
+
+        // 5. Notifikasi Editor dijalankan SETELAH response terkirim (tidak menahan user).
+        // Di luar try di atas: jika gagal, berita tetap tersimpan dan user tidak melihat pesan gagal palsu.
+        defer(function () use ($news, $user) {
+            try {
+                $editors = User::role('editor')->get();
+                if ($editors->isNotEmpty()) {
+                    Notification::send($editors, new NewsSubmittedNotification(
+                        $news->id,
+                        $news->title,
+                        $user->name
+                    ));
+                }
+            } catch (\Exception $e) {
+                report($e);
+            }
+        });
+
+        return redirect()->route('news.index')->with('success', 'Berita berhasil disimpan!');
     }
 
     /**
@@ -208,7 +231,7 @@ class NewsController extends Controller
             ]);
         } catch (\Exception $e) {
             // Menangani error DB/Relasi lainnya
-            Log::error('DB Show News Error: ' . $e->getMessage());
+            report($e);
             return redirect()->route('news.index')->with('error', 'Terjadi kesalahan saat memuat detail berita.');
         }
     }

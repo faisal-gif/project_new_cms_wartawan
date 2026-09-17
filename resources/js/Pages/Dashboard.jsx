@@ -30,17 +30,18 @@ export default function Dashboard({ auth, recentNews, stats: dbStats }) {
         },
         {
             title: "Tayang Nasional",
-            value: dbStats?.tayang_nasional || 0,
+            // null = gagal dimuat dari DB nasional, jangan tampilkan 0
+            value: dbStats?.tayang_nasional ?? '—',
             icon: Globe,
             color: "text-indigo-500",
-            desc: "Berhasil tembus pusat"
+            desc: dbStats?.tayang_nasional === null ? "Data tidak tersedia" : "Berhasil tembus pusat"
         },
         {
             title: "Tayang Daerah",
-            value: dbStats?.tayang_daerah || 0,
+            value: dbStats?.tayang_daerah ?? '—',
             icon: MapPin,
             color: "text-green-500",
-            desc: "Terindeks di portal lokal"
+            desc: dbStats?.tayang_daerah === null ? "Data tidak tersedia" : "Terindeks di portal lokal"
         },
     ];
 
@@ -152,7 +153,11 @@ export default function Dashboard({ auth, recentNews, stats: dbStats }) {
                             <CardContent className="p-0">
                                 <div className="divide-y">
                                     <Deferred data="recentNews" fallback={[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 m-4 sm:mx-6" />)}>
-                                    {() => recentNews.map((item) => (
+                                    {() => recentNews === null ? (
+                                        <p className="p-6 text-sm text-muted-foreground italic">
+                                            Data berita terakhir tidak tersedia saat ini. Coba muat ulang halaman.
+                                        </p>
+                                    ) : recentNews.map((item) => (
                                         <div key={item.id} className="p-4 sm:px-6 hover:bg-muted/30 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 
                                             {/* Judul & Waktu */}

@@ -8,7 +8,6 @@ use App\Models\NewsNasional;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -35,8 +34,8 @@ class DashboardController extends Controller
                         ->take(5)
                         ->get();
                 } catch (Exception $e) {
-                    Log::error('Dashboard Error (recentNews): ' . $e->getMessage());
-                    return [];
+                    report($e);
+                    return null; // null = gagal dimuat (beda dengan [] = memang kosong)
                 }
             }),
 
@@ -55,13 +54,13 @@ class DashboardController extends Controller
                             : 0,
                     ]);
                 } catch (Exception $e) {
-                    Log::error('Dashboard Error (stats): ' . $e->getMessage());
+                    report($e);
 
-                    // Jika database relasi mati, kembalikan nilai kosong agar FE tidak crash
+                    // DB relasi mati: null = "data tidak tersedia", jangan tampilkan 0 yang menyesatkan
                     return [
                         'total_master' => News::where('writer_id', $user->id)->count(),
-                        'tayang_daerah' => 0,
-                        'tayang_nasional' => 0,
+                        'tayang_daerah' => null,
+                        'tayang_nasional' => null,
                     ];
                 }
             }),

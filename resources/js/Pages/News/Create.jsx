@@ -15,7 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 
 export default function Create() {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, progress, errors } = useForm({
         title: '',
         content: '',
         tag: [],
@@ -81,7 +81,7 @@ export default function Create() {
                         {/* Desktop: Hapus onClick={submit} */}
                         <Button type="submit" form="news-form" disabled={processing}>
                             <Save className="w-4 h-4 mr-2" />
-                            {processing ? 'Menyimpan...' : 'Simpan Berita'}
+                            {progress ? `Mengunggah ${progress.percentage}%` : processing ? 'Menyimpan...' : 'Simpan Berita'}
                         </Button>
                     </div>
 
@@ -208,7 +208,7 @@ export default function Create() {
                     form="news-form"
                 >
                     <Save className="w-4 h-4 mr-2" />
-                    {processing ? 'Menyimpan...' : 'Simpan'}
+                    {progress ? `Mengunggah ${progress.percentage}%` : processing ? 'Menyimpan...' : 'Simpan'}
                 </Button>
             </div>
 

@@ -16,8 +16,16 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Eye, MessageSquare, Copy, Check, ExternalLink } from 'lucide-react';
 import { Input } from '@/Components/ui/input';
 import { Badge } from '@/Components/ui/badge';
+import { Skeleton } from '@/Components/ui/skeleton';
 
-export default function Index({ news, filters }) {
+export default function Index({ news, filters, distribution }) {
+    // Gabungkan status distribusi (deferred, dari DB remote) ke tiap berita
+    const items = news.data.map((item) => ({ ...item, ...(distribution?.[item.is_code] ?? {}) }));
+    const distributionLoading = distribution === undefined;
+    // null = gagal dimuat dari DB remote (beda dengan "tidak didistribusikan")
+    const distributionFailed = distribution === null;
+    const unavailable = <span className="text-[11px] text-muted-foreground italic">Data tidak tersedia</span>;
+
     const [searchTerm, setSearchTerm] = useState(filters?.search || '');
     // State untuk melacak ID item yang sedang disalin URL-nya
     const [copiedId, setCopiedId] = useState(null);
@@ -138,8 +146,8 @@ export default function Index({ news, filters }) {
                                 TAMPILAN MOBILE (KARTU)
                             ========================================== */}
                             <div className="flex flex-col gap-4 md:hidden">
-                                {news.data.length > 0 ? (
-                                    news.data.map((item) => (
+                                {items.length > 0 ? (
+                                    items.map((item) => (
                                         <Card key={item.id} className="shadow-sm overflow-hidden border-muted">
                                             <CardContent className="p-4 space-y-3">
                                                 {/* Header Kartu: ID, Tanggal */}
@@ -175,7 +183,7 @@ export default function Index({ news, filters }) {
                                                     {/* Blok Daerah */}
                                                     <div className="space-y-1.5">
                                                         <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Daerah</span>
-                                                        {item.news_daerah ? (
+                                                        {distributionLoading ? <Skeleton className="h-16 w-full" /> : distributionFailed ? unavailable : item.news_daerah ? (
                                                             <div className="p-2 border rounded-md bg-muted/10 space-y-1.5 h-full flex flex-col justify-between">
                                                                 <p className="text-[11px] font-medium line-clamp-2 leading-tight" title={item.news_daerah.title}>
                                                                     {item.news_daerah.title}
@@ -195,7 +203,7 @@ export default function Index({ news, filters }) {
                                                     {/* Blok Nasional Mobile */}
                                                     <div className="space-y-1.5">
                                                         <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Nasional</span>
-                                                        {item.news_nasional ? (
+                                                        {distributionLoading ? <Skeleton className="h-16 w-full" /> : distributionFailed ? unavailable : item.news_nasional ? (
                                                             <div className="p-2 border rounded-md bg-muted/10 space-y-1.5 h-full flex flex-col justify-between">
                                                                 <div className="flex items-start justify-between gap-1">
                                                                     {/* Tambahkan link pada judul jika ada URL */}
@@ -262,8 +270,8 @@ export default function Index({ news, filters }) {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {news.data.length > 0 ? (
-                                            news.data.map((item) => (
+                                        {items.length > 0 ? (
+                                            items.map((item) => (
                                                 <TableRow key={item.id} className="group hover:bg-muted/10">
                                                     <TableCell className="font-medium text-muted-foreground align-top pt-5">
                                                         #{item.id}
@@ -287,7 +295,7 @@ export default function Index({ news, filters }) {
                                                     </TableCell>
 
                                                     <TableCell className="align-top">
-                                                        {item.news_daerah ? (
+                                                        {distributionLoading ? <Skeleton className="h-[70px] w-full" /> : distributionFailed ? unavailable : item.news_daerah ? (
                                                             <Card className="shadow-none border bg-background group-hover:border-muted-foreground/30 transition-colors h-full">
                                                                 <CardContent className="p-3 space-y-2">
                                                                     <p className="text-xs font-medium leading-snug whitespace-normal break-words" title={item.news_daerah.title}>
@@ -310,7 +318,7 @@ export default function Index({ news, filters }) {
 
                                                     {/* Kolom Nasional Desktop */}
                                                     <TableCell className="align-top">
-                                                        {item.news_nasional ? (
+                                                        {distributionLoading ? <Skeleton className="h-[70px] w-full" /> : distributionFailed ? unavailable : item.news_nasional ? (
                                                             <Card className="shadow-none border bg-background group-hover:border-muted-foreground/30 transition-colors h-full flex flex-col justify-between">
                                                                 <CardContent className="p-3 flex flex-col h-full space-y-2">
                                                                     {item.news_nasional.url ? (

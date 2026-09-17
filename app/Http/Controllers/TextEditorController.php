@@ -42,7 +42,7 @@ class TextEditorController extends Controller
 
         } catch (\Exception $e) {
             // Tangkap error dari CDN (misal: timeout, auth error)
-            // Bisa juga ditambahkan Log::error($e->getMessage()); untuk debugging backend
+            report($e);
             return response()->json([
                 'message' => 'Terjadi kesalahan pada server CDN saat mengunggah gambar.'
             ], 500);

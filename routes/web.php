@@ -4,7 +4,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\NewsDaerahController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\SsoController;
 use App\Http\Controllers\TextEditorController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -14,7 +13,6 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::get('/sso-login', [SsoController::class, 'handleSso'])->name('sso.login');
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
