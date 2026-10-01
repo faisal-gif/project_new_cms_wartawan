@@ -18,6 +18,27 @@ CMS untuk wartawan menulis berita "master" yang kemudian didistribusikan ke port
 - Akun wartawan dibuat oleh admin. **Tidak ada** registrasi publik maupun halaman profil.
 - Data dari DB daerah/nasional dimuat **deferred** (setelah halaman tampil) dan koneksinya memakai timeout 5 detik. Jika gagal, UI menampilkan "Data tidak tersedia", bukan angka 0.
 
+## Database bersama (penting)
+
+DB lokal CMS **sengaja dipakai bersama** aplikasi lain (web editor). Tabel infrastruktur Laravel ikut terbagi, jadi setiap aplikasi wajib memakai namespace sendiri:
+
+| `.env` | Nilai CMS ini | Kalau tidak diatur |
+|---|---|---|
+| `DB_QUEUE` | `cms-wartawan` | Worker CMS mengambil job aplikasi lain lalu menggagalkannya (class job tidak ada di sini) |
+| `CACHE_PREFIX` | `cms_wartawan_` | Key cache bertabrakan di tabel `cache` yang sama |
+| `SESSION_TABLE` | `writer_sessions` | Sesi CMS dan aplikasi lain bercampur di tabel `sessions` |
+| `SESSION_COOKIE` | `cms_wartawan_session` | Cookie saling menimpa jika satu domain induk |
+| `APP_NAME` | `CMS Wartawan` | `CACHE_PREFIX` dan `SESSION_COOKIE` default diturunkan dari nama ini |
+
+Perintah yang **jangan** dijalankan di server, karena berdampak ke aplikasi lain:
+
+| Perintah | Dampak |
+|---|---|
+| `php artisan cache:clear` | Menghapus **seluruh** baris tabel `cache`, termasuk milik aplikasi lain (flush driver database mengabaikan prefix). Hapus key tertentu saja lewat `Cache::forget()`. |
+| `php artisan queue:flush` | Menghapus semua `failed_jobs`, termasuk milik aplikasi lain |
+| `php artisan queue:retry all` | Mengulang job gagal milik aplikasi lain juga. Retry per UUID saja. |
+| `migrate:fresh`, `migrate:rollback`, `db:wipe` | Menghapus/memutar balik tabel aplikasi lain. Tabel `migrations` juga bersama. |
+
 ## Kebutuhan
 
 - PHP 8.2+ (ekstensi `pdo_mysql`, `curl`, `mbstring`)
