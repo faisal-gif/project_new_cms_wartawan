@@ -13,9 +13,12 @@ module.exports = {
             cwd: __dirname,
             script: 'artisan',
             interpreter: 'php',
+            // --queue WAJIB: tabel `jobs` dipakai bersama aplikasi lain di DB yang sama.
+            // Tanpa ini worker ikut mengambil job aplikasi lain dan menggagalkannya
+            // (class-nya tidak ada di sini). Harus sama dengan DB_QUEUE di .env.
             // --timeout harus < retry_after queue database (90 detik, config/queue.php)
             // --max-time: worker keluar tiap jam lalu dihidupkan ulang pm2 (mencegah memory leak)
-            args: 'queue:work --sleep=3 --tries=3 --timeout=60 --max-time=3600',
+            args: 'queue:work --queue=cms-wartawan --sleep=3 --tries=3 --timeout=60 --max-time=3600',
             exec_mode: 'fork',
             instances: 1,
             autorestart: true,

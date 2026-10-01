@@ -72,6 +72,9 @@ Yang wajib berjalan di server:
 
 - **nginx + PHP-FPM** untuk web (atau LiteSpeed). Notifikasi editor dikirim via `defer()` *setelah* response terkirim. Ini hanya bekerja dengan `fastcgi_finish_request`, **tidak** dengan `php artisan serve`.
 - **Queue worker lewat pm2** ([ecosystem.config.cjs](ecosystem.config.cjs)). Broadcast notifikasi editor masuk queue `database`. Tanpa worker, notifikasi realtime tidak terkirim. Setup pertama kali:
+
+  > ⚠️ Tabel `jobs` dipakai bersama aplikasi lain di DB yang sama. CMS ini **wajib** memakai nama queue sendiri: `DB_QUEUE=cms-wartawan` di `.env` dan `--queue=cms-wartawan` di worker. Tanpa itu, worker CMS akan mengambil job aplikasi lain dan menggagalkannya karena class job-nya tidak ada di sini.
+
   ```bash
   pm2 start ecosystem.config.cjs
   pm2 save && pm2 startup
